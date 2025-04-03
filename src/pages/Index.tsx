@@ -15,39 +15,39 @@ const Index = () => {
     {
       id: 1,
       image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070",
-      title: "Beach Paradise Escape",
-      location: "Bali, Indonesia",
+      title: "Goa Beach Holiday",
+      location: "Goa, India",
       duration: "5 Days / 4 Nights",
-      price: "$899",
+      price: "19,999",
       rating: 5,
       discount: "20% OFF"
     },
     {
       id: 2,
       image: "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?q=80&w=1887",
-      title: "Paris City Tour",
-      location: "Paris, France",
+      title: "Kerala Backwaters",
+      location: "Kerala, India",
       duration: "4 Days / 3 Nights",
-      price: "$799",
+      price: "15,999",
       rating: 4
     },
     {
       id: 3,
       image: "https://images.unsplash.com/photo-1512100356356-de1b84283e18?q=80&w=1975",
-      title: "Thailand Adventure",
-      location: "Bangkok & Phuket",
+      title: "Rajasthan Heritage Tour",
+      location: "Jaipur & Udaipur",
       duration: "7 Days / 6 Nights",
-      price: "$1,199",
+      price: "24,999",
       rating: 5,
       discount: "15% OFF"
     },
     {
       id: 4,
       image: "https://images.unsplash.com/photo-1535152903264-15fc4895bba9?q=80&w=1160",
-      title: "Dubai City Delights",
-      location: "Dubai, UAE",
+      title: "Manali Adventure",
+      location: "Himachal Pradesh, India",
       duration: "5 Days / 4 Nights",
-      price: "$1,299",
+      price: "16,999",
       rating: 4
     }
   ];
@@ -96,7 +96,7 @@ const Index = () => {
         <section className="py-16 bg-travel-gray-light">
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
-              <h2 className="section-title mx-auto">Why Choose Us</h2>
+              <h2 className="section-title mx-auto">Why Choose ASB Travels</h2>
               <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
                 We provide the best travel experiences with premium services tailored to your needs
               </p>
@@ -119,8 +119,8 @@ const Index = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">Worldwide Coverage</h3>
-                <p className="text-gray-600">Explore destinations worldwide with our extensive network of travel partners globally.</p>
+                <h3 className="text-xl font-semibold mb-2">Pan-India Coverage</h3>
+                <p className="text-gray-600">Explore destinations across India with our extensive network of travel partners.</p>
               </div>
               
               <div className="bg-white p-6 rounded-xl shadow-md text-center">

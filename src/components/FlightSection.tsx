@@ -1,14 +1,14 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Plane } from "lucide-react";
+import { Plane, IndianRupee } from "lucide-react";
 
 const FlightSection = () => {
   const popularFlights = [
-    { from: "New York", to: "London", price: "$349", date: "Nov 15 - Nov 22" },
-    { from: "Los Angeles", to: "Tokyo", price: "$699", date: "Dec 3 - Dec 17" },
-    { from: "Chicago", to: "Paris", price: "$429", date: "Jan 8 - Jan 15" },
-    { from: "Miami", to: "Cancún", price: "$199", date: "Oct 25 - Nov 1" },
+    { from: "New Delhi", to: "Mumbai", price: "₹3,499", date: "Nov 15 - Nov 22" },
+    { from: "Mumbai", to: "Goa", price: "₹2,899", date: "Dec 3 - Dec 17" },
+    { from: "Bengaluru", to: "Jaipur", price: "₹4,299", date: "Jan 8 - Jan 15" },
+    { from: "Chennai", to: "Kolkata", price: "₹3,199", date: "Oct 25 - Nov 1" },
   ];
 
   return (
@@ -31,7 +31,10 @@ const FlightSection = () => {
                 <div className="text-travel-blue">
                   <Plane size={24} />
                 </div>
-                <span className="text-travel-orange font-bold text-lg">{flight.price}</span>
+                <div className="flex items-center text-travel-orange">
+                  <IndianRupee size={16} className="mr-1" />
+                  <span className="font-bold text-lg">{flight.price}</span>
+                </div>
               </div>
               <div className="mb-3">
                 <div className="flex justify-between mb-1">

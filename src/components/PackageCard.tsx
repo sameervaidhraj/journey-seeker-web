@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Calendar, MapPin, Clock } from "lucide-react";
+import { Calendar, MapPin, Clock, IndianRupee } from "lucide-react";
 
 interface PackageCardProps {
   image: string;
@@ -74,7 +74,10 @@ const PackageCard = ({
         <div className="flex items-center justify-between pt-2 border-t">
           <div>
             <span className="text-xs text-gray-500">Starting from</span>
-            <div className="text-travel-blue font-bold">{price}</div>
+            <div className="flex items-center text-travel-blue">
+              <IndianRupee size={14} className="mr-1" />
+              <span className="font-bold">{price}</span>
+            </div>
           </div>
           <Button size="sm" className="bg-travel-blue hover:bg-travel-blue-dark">
             View Details
