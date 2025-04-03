@@ -2,12 +2,19 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    setIsMenuOpen(false);
   };
 
   return (
@@ -22,18 +29,25 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <a href="#" className="text-gray-700 hover:text-travel-blue font-medium">Holiday Packages</a>
-            <a href="#" className="text-gray-700 hover:text-travel-blue font-medium">Flights</a>
-            <a href="#" className="text-gray-700 hover:text-travel-blue font-medium">Hotels</a>
-            <a href="#" className="text-gray-700 hover:text-travel-blue font-medium">Special Offers</a>
-            <a href="#" className="text-gray-700 hover:text-travel-blue font-medium">Contact Us</a>
+            <button onClick={() => handleNavigation("/")} className="text-gray-700 hover:text-travel-blue font-medium">Holiday Packages</button>
+            <button onClick={() => handleNavigation("/flights")} className="text-gray-700 hover:text-travel-blue font-medium">Flights</button>
+            <button onClick={() => handleNavigation("/hotels")} className="text-gray-700 hover:text-travel-blue font-medium">Hotels</button>
+            <button onClick={() => handleNavigation("/offers")} className="text-gray-700 hover:text-travel-blue font-medium">Special Offers</button>
+            <button onClick={() => handleNavigation("/contact")} className="text-gray-700 hover:text-travel-blue font-medium">Contact Us</button>
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <Button variant="outline" className="border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white">
+            <Button 
+              variant="outline" 
+              className="border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
+              onClick={() => handleNavigation("/login")}
+            >
               User Login
             </Button>
-            <Button className="bg-travel-orange text-white hover:bg-travel-orange/90">
+            <Button 
+              className="bg-travel-orange text-white hover:bg-travel-orange/90"
+              onClick={() => handleNavigation("/admin-login")}
+            >
               Admin Login
             </Button>
           </div>
@@ -53,16 +67,23 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pt-4 pb-3 space-y-3 animate-fade-in">
-            <a href="#" className="block text-gray-700 hover:text-travel-blue font-medium py-2">Holiday Packages</a>
-            <a href="#" className="block text-gray-700 hover:text-travel-blue font-medium py-2">Flights</a>
-            <a href="#" className="block text-gray-700 hover:text-travel-blue font-medium py-2">Hotels</a>
-            <a href="#" className="block text-gray-700 hover:text-travel-blue font-medium py-2">Special Offers</a>
-            <a href="#" className="block text-gray-700 hover:text-travel-blue font-medium py-2">Contact Us</a>
+            <button onClick={() => handleNavigation("/")} className="block w-full text-left text-gray-700 hover:text-travel-blue font-medium py-2">Holiday Packages</button>
+            <button onClick={() => handleNavigation("/flights")} className="block w-full text-left text-gray-700 hover:text-travel-blue font-medium py-2">Flights</button>
+            <button onClick={() => handleNavigation("/hotels")} className="block w-full text-left text-gray-700 hover:text-travel-blue font-medium py-2">Hotels</button>
+            <button onClick={() => handleNavigation("/offers")} className="block w-full text-left text-gray-700 hover:text-travel-blue font-medium py-2">Special Offers</button>
+            <button onClick={() => handleNavigation("/contact")} className="block w-full text-left text-gray-700 hover:text-travel-blue font-medium py-2">Contact Us</button>
             <div className="flex flex-col gap-2 mt-3">
-              <Button variant="outline" className="w-full border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white">
+              <Button 
+                variant="outline" 
+                className="w-full border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
+                onClick={() => handleNavigation("/login")}
+              >
                 User Login
               </Button>
-              <Button className="w-full bg-travel-orange text-white hover:bg-travel-orange/90">
+              <Button 
+                className="w-full bg-travel-orange text-white hover:bg-travel-orange/90"
+                onClick={() => handleNavigation("/admin-login")}
+              >
                 Admin Login
               </Button>
             </div>
