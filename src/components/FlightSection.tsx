@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Airplane } from "lucide-react";
+import { Plane } from "lucide-react";
 
 const FlightSection = () => {
   const popularFlights = [
@@ -29,7 +29,7 @@ const FlightSection = () => {
             >
               <div className="flex justify-between items-center mb-4">
                 <div className="text-travel-blue">
-                  <Airplane size={24} />
+                  <Plane size={24} />
                 </div>
                 <span className="text-travel-orange font-bold text-lg">{flight.price}</span>
               </div>
