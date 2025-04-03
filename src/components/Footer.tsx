@@ -1,6 +1,7 @@
 
 import React from "react";
-import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { Facebook, Twitter, Instagram, Youtube, Mail, Phone, MapPin, MessageSquare } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -9,21 +10,21 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* About Us */}
           <div>
-            <h3 className="text-2xl font-bold text-white mb-4">Journey<span className="text-travel-orange">Seeker</span></h3>
+            <h3 className="text-2xl font-bold text-white mb-4">ASB<span className="text-travel-orange">Travels</span></h3>
             <p className="mb-4 text-gray-400">
-              We specialize in providing the best travel experiences worldwide. Our mission is to help you discover the beauty of the world with comfort and convenience.
+              We specialize in providing the best travel experiences across India. Our mission is to help you discover the beauty of India with comfort and convenience.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://facebook.com/asbtravels" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Facebook size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://twitter.com/asbtravels" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Twitter size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://instagram.com/asbtravels" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Instagram size={20} />
               </a>
-              <a href="#" className="text-gray-400 hover:text-white">
+              <a href="https://youtube.com/asbtravels" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
                 <Youtube size={20} />
               </a>
             </div>
@@ -33,11 +34,11 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">About Us</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Holiday Packages</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Flight Booking</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Hotel Reservation</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Travel Blog</a></li>
+              <li><Link to="/" className="text-gray-400 hover:text-white">Holiday Packages</Link></li>
+              <li><Link to="/flights" className="text-gray-400 hover:text-white">Flight Booking</Link></li>
+              <li><Link to="/hotels" className="text-gray-400 hover:text-white">Hotel Reservation</Link></li>
+              <li><Link to="/offers" className="text-gray-400 hover:text-white">Special Offers</Link></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Terms & Conditions</a></li>
             </ul>
           </div>
@@ -47,10 +48,11 @@ const Footer = () => {
             <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
             <ul className="space-y-2">
               <li><a href="#" className="text-gray-400 hover:text-white">FAQ</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Contact Us</a></li>
+              <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
               <li><a href="#" className="text-gray-400 hover:text-white">Refund Policy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Careers</a></li>
+              <li><Link to="/login" className="text-gray-400 hover:text-white">User Login</Link></li>
+              <li><Link to="/admin-login" className="text-gray-400 hover:text-white">Admin Login</Link></li>
             </ul>
           </div>
 
@@ -61,16 +63,22 @@ const Footer = () => {
               <li className="flex items-start">
                 <MapPin size={18} className="mr-2 mt-0.5 text-travel-orange" />
                 <span className="text-gray-400">
-                  123 Travel Street, City Center, New York, NY 10001
+                  123 Travel Street, City Center, New Delhi, 110001, India
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-2 text-travel-orange" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">+91 98765 43210</span>
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 text-travel-orange" />
-                <span className="text-gray-400">info@journeyseeker.com</span>
+                <span className="text-gray-400">info@asbtravels.com</span>
+              </li>
+              <li className="flex items-center">
+                <MessageSquare size={18} className="mr-2 text-travel-orange" />
+                <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+                  WhatsApp: +91 98765 43210
+                </a>
               </li>
             </ul>
           </div>
@@ -78,7 +86,7 @@ const Footer = () => {
 
         <div className="border-t border-gray-700 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm mb-4 md:mb-0">
-            &copy; {new Date().getFullYear()} JourneySeeker. All Rights Reserved.
+            &copy; {new Date().getFullYear()} ASB Travels. All Rights Reserved.
           </p>
           <div className="flex space-x-4">
             <a href="#" className="text-gray-400 hover:text-white text-sm">
