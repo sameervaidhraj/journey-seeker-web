@@ -1,6 +1,5 @@
 
 import React from 'react';
-import SearchForm from './SearchForm';
 
 const HeroSection = () => {
   return (
@@ -16,17 +15,13 @@ const HeroSection = () => {
       
       {/* Content */}
       <div className="container mx-auto px-4 h-full flex flex-col justify-center relative z-10">
-        <div className="max-w-3xl mx-auto text-center mb-8">
+        <div className="max-w-3xl mx-auto text-center">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 drop-shadow-lg">
             Discover Your Perfect Getaway
           </h1>
           <p className="text-xl text-white mb-8 drop-shadow-md">
             Find and book amazing travel experiences with our exclusive holiday packages, flights, and hotels
           </p>
-        </div>
-
-        <div className="max-w-4xl mx-auto w-full">
-          <SearchForm />
         </div>
       </div>
     </div>
