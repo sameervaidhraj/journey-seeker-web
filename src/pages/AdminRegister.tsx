@@ -76,7 +76,7 @@ const AdminRegister = () => {
 
     // Redirect to admin login after successful registration
     setTimeout(() => {
-      navigate('/admin-login');
+      navigate('/admin/login');
     }, 2000);
   };
 
@@ -177,7 +177,7 @@ const AdminRegister = () => {
             <CardFooter className="flex justify-center">
               <p className="text-sm text-gray-600">
                 Already have an admin account?{" "}
-                <a href="/admin-login" className="text-travel-orange hover:underline">
+                <a href="/admin/login" className="text-travel-orange hover:underline">
                   Sign in
                 </a>
               </p>

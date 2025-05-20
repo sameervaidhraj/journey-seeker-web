@@ -42,7 +42,7 @@ const AdminLogin = () => {
 
     // Redirect to admin dashboard after successful login
     setTimeout(() => {
-      navigate('/admin-dashboard');
+      navigate('/admin/dashboard');
     }, 1500);
   };
 
@@ -54,7 +54,7 @@ const AdminLogin = () => {
         <div className="w-full max-w-md px-4">
           <Card>
             <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl text-center">Admin Login</CardTitle>
+              <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
               <CardDescription className="text-center">
                 Enter your credentials to access the admin dashboard
               </CardDescription>
@@ -74,7 +74,7 @@ const AdminLogin = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <Label htmlFor="password">Password</Label>
-                    <a href="/admin-forgot-password" className="text-sm text-travel-blue hover:underline">
+                    <a href="/admin/forgot-password" className="text-sm text-travel-orange hover:underline">
                       Forgot password?
                     </a>
                   </div>
@@ -96,7 +96,7 @@ const AdminLogin = () => {
               </a>
               <div className="text-center text-sm text-gray-600">
                 Need an admin account?{" "}
-                <a href="/admin-register" className="text-travel-orange hover:underline">
+                <a href="/admin/register" className="text-travel-orange hover:underline">
                   Register as Admin
                 </a>
               </div>
