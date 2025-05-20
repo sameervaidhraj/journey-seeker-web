@@ -90,10 +90,16 @@ const AdminLogin = () => {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex justify-center">
+            <CardFooter className="flex flex-col space-y-2">
               <a href="/login" className="text-sm text-travel-blue hover:underline">
                 Go to User Login
               </a>
+              <div className="text-center text-sm text-gray-600">
+                Need an admin account?{" "}
+                <a href="/admin-register" className="text-travel-orange hover:underline">
+                  Register as Admin
+                </a>
+              </div>
             </CardFooter>
           </Card>
         </div>
