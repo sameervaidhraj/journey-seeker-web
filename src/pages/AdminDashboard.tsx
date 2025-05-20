@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -16,18 +15,16 @@ import AdminPackages from './AdminPackages';
 import AdminHotels from './AdminHotels';
 import AdminFlights from './AdminFlights';
 import AdminOffers from './AdminOffers';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
+  const { logout, adminUser } = useAdminAuth();
 
   const handleLogout = () => {
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully.",
-    });
-    navigate('/');
+    logout();
   };
 
   // Sample data for the admin dashboard
@@ -228,11 +225,11 @@ const AdminDashboard = () => {
               {/* Admin Avatar */}
               <div className="flex items-center">
                 <div className="w-8 h-8 rounded-full bg-travel-blue flex items-center justify-center text-white font-bold">
-                  A
+                  {adminUser?.name.charAt(0) || 'A'}
                 </div>
                 <div className="ml-2 text-sm">
-                  <div className="font-medium">Admin</div>
-                  <div className="text-xs text-gray-500">admin@asbtravels.com</div>
+                  <div className="font-medium">{adminUser?.name || 'Admin'}</div>
+                  <div className="text-xs text-gray-500">{adminUser?.email || 'admin@asbtravels.com'}</div>
                 </div>
               </div>
             </div>

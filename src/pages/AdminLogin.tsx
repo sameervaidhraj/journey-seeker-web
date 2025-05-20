@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,14 +15,23 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAdminAuth();
 
-  const handleLogin = (e: React.FormEvent) => {
+  // If already authenticated, redirect to admin dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/admin/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
@@ -34,16 +43,11 @@ const AdminLogin = () => {
       return;
     }
 
-    // For demo purposes - in a real app, this would authenticate with a backend
-    toast({
-      title: "Success",
-      description: "Admin logged in successfully. Redirecting to dashboard...",
-    });
-
-    // Redirect to admin dashboard after successful login
-    setTimeout(() => {
+    const success = await login(email, password);
+    
+    if (success) {
       navigate('/admin/dashboard');
-    }, 1500);
+    }
   };
 
   return (
@@ -56,7 +60,7 @@ const AdminLogin = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
               <CardDescription className="text-center">
-                Enter your credentials to access the admin dashboard
+                Enter your admin credentials to access the dashboard
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -90,10 +94,7 @@ const AdminLogin = () => {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col space-y-2">
-              <a href="/login" className="text-sm text-travel-blue hover:underline">
-                Go to User Login
-              </a>
+            <CardFooter className="flex justify-center">
               <div className="text-center text-sm text-gray-600">
                 Need an admin account?{" "}
                 <a href="/admin/register" className="text-travel-orange hover:underline">

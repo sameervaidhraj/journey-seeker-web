@@ -28,6 +28,10 @@ import AdminOffers from "./pages/AdminOffers";
 // Shared Pages
 import NotFound from "./pages/NotFound";
 
+// Admin Auth Provider
+import AdminAuthProvider from "./contexts/AdminAuthContext";
+import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
+
 // Create context for sharing data between admin and user sides
 export interface Package {
   id: string;
@@ -142,39 +146,45 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              {/* User Routes */}
-              <Route path="/" element={<Index />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/user-dashboard" element={<UserDashboard />} />
-              <Route path="/flights" element={<Flights />} />
-              <Route path="/hotels" element={<Hotels />} />
-              <Route path="/offers" element={<Offers />} />
-              <Route path="/contact" element={<Contact />} />
-              
-              {/* Admin Routes */}
-              <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/register" element={<AdminRegister />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/packages" element={<AdminPackages />} />
-              <Route path="/admin/hotels" element={<AdminHotels />} />
-              <Route path="/admin/flights" element={<AdminFlights />} />
-              <Route path="/admin/offers" element={<AdminOffers />} />
-              
-              {/* Redirect old admin routes to new ones */}
-              <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
-              <Route path="/admin-register" element={<Navigate to="/admin/register" replace />} />
-              <Route path="/admin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
-              <Route path="/admin-packages" element={<Navigate to="/admin/packages" replace />} />
-              <Route path="/admin-hotels" element={<Navigate to="/admin/hotels" replace />} />
-              <Route path="/admin-flights" element={<Navigate to="/admin/flights" replace />} />
-              <Route path="/admin-offers" element={<Navigate to="/admin/offers" replace />} />
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AdminAuthProvider>
+              <Routes>
+                {/* User Routes */}
+                <Route path="/" element={<Index />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/user-dashboard" element={<UserDashboard />} />
+                <Route path="/flights" element={<Flights />} />
+                <Route path="/hotels" element={<Hotels />} />
+                <Route path="/offers" element={<Offers />} />
+                <Route path="/contact" element={<Contact />} />
+                
+                {/* Public Admin Routes */}
+                <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin/register" element={<AdminRegister />} />
+                
+                {/* Protected Admin Routes */}
+                <Route element={<ProtectedAdminRoute />}>
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/packages" element={<AdminPackages />} />
+                  <Route path="/admin/hotels" element={<AdminHotels />} />
+                  <Route path="/admin/flights" element={<AdminFlights />} />
+                  <Route path="/admin/offers" element={<AdminOffers />} />
+                </Route>
+                
+                {/* Redirect old admin routes to new ones */}
+                <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
+                <Route path="/admin-register" element={<Navigate to="/admin/register" replace />} />
+                <Route path="/admin-dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin-packages" element={<Navigate to="/admin/packages" replace />} />
+                <Route path="/admin-hotels" element={<Navigate to="/admin/hotels" replace />} />
+                <Route path="/admin-flights" element={<Navigate to="/admin/flights" replace />} />
+                <Route path="/admin-offers" element={<Navigate to="/admin/offers" replace />} />
+                
+                {/* Catch-all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </AdminAuthProvider>
           </BrowserRouter>
         </TooltipProvider>
       </TravelDataContext.Provider>
