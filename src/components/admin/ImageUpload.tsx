@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
 
 interface ImageUploadProps {
@@ -76,7 +76,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           onClick={() => document.getElementById('image-upload')?.click()}
           className="w-full border-dashed border-2 py-8 flex flex-col items-center justify-center hover:bg-gray-50"
         >
-          <upload className="h-6 w-6 mb-2" />
+          <Upload className="h-6 w-6 mb-2" />
           <span className="text-sm text-gray-600">Click to select image</span>
           <span className="text-xs text-gray-400 mt-1">or drag and drop</span>
         </Button>
