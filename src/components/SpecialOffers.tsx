@@ -1,7 +1,7 @@
 
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from '@tanstack/react-query';
 
@@ -62,7 +62,7 @@ const SpecialOffers = () => {
     <section className="py-12 md:py-20 travel-gradient">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Special Offers & Deals</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Special Offers & Deals</h2>
           <p className="text-white/80 max-w-2xl mx-auto">
             Limited-time offers and exclusive deals to make your dream vacation affordable
           </p>

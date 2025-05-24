@@ -1,7 +1,6 @@
 
 import React from 'react';
 import HeroSection from '@/components/HeroSection';
-import SearchForm from '@/components/SearchForm';
 import PackageCard from '@/components/PackageCard';
 import SpecialOffers from '@/components/SpecialOffers';
 import Testimonials from '@/components/Testimonials';
@@ -36,7 +35,6 @@ const Index = () => {
   return (
     <div>
       <HeroSection />
-      <SearchForm />
       
       {/* Popular Packages Section */}
       <section className="py-16 bg-gray-50">
@@ -60,10 +58,10 @@ const Index = () => {
                   key={pkg.id}
                   image={pkg.image_url}
                   title={pkg.title}
-                  location="India" // You might want to add location field to your database
+                  location="India"
                   duration={pkg.duration}
                   price={pkg.price.replace('₹', '')}
-                  rating={4} // You might want to add rating field to your database
+                  rating={4}
                 />
               ))}
             </div>

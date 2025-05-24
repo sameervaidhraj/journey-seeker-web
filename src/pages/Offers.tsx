@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, Percent } from 'lucide-react';
+import { Clock, Percent } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from '@tanstack/react-query';
 
@@ -100,7 +100,9 @@ const Offers = () => {
                       {offer.original_price && (
                         <span className="line-through text-gray-400 mr-2 text-lg">₹{offer.original_price}</span>
                       )}
-                      <span className="text-2xl font-bold text-travel-blue">₹{offer.price}</span>
+                      <span className="text-2xl font-bold text-travel-blue">
+                        {offer.price?.startsWith('₹') ? offer.price : `₹${offer.price}`}
+                      </span>
                       {offer.discount && offer.discount > 0 && (
                         <span className="ml-3 flex items-center bg-green-100 text-green-600 px-2 py-1 rounded text-sm font-medium">
                           <Percent size={14} className="mr-1" /> {offer.discount}% OFF
