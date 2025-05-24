@@ -20,57 +20,116 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+interface OfferData {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  price: string;
+  original_price?: string;
+  discount?: number;
+  validity?: string;
+  highlight?: string;
+  limited?: boolean;
+}
 
 const AdminOffers = () => {
   const { toast } = useToast();
-  const [offers, setOffers] = useState([
-    {
-      id: 1,
-      category: "Holiday Package",
-      title: "Goa Beach Getaway",
-      description: "3 nights and 4 days at a luxury beach resort with all meals included",
-      price: "25,999",
-      originalPrice: "32,500",
-      discount: 20,
-      validity: "31 July 2025",
-      highlight: "Complimentary water sports session",
-      limited: true
-    },
-    {
-      id: 2,
-      category: "Flight Deal",
-      title: "Delhi-Mumbai Return",
-      description: "Special fare for return flights between Delhi and Mumbai",
-      price: "9,499",
-      originalPrice: "12,999",
-      discount: 27,
-      validity: "15 June 2025",
-      limited: false
-    },
-    {
-      id: 3,
-      category: "Hotel Offer",
-      title: "Luxury Stay in Udaipur",
-      description: "2 nights at a 5-star heritage property with breakfast and dinner",
-      price: "18,500",
-      originalPrice: "24,999",
-      discount: 26,
-      validity: "30 September 2025",
-      highlight: "Complimentary palace tour",
-      limited: false
-    },
-  ]);
+  const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newOffer, setNewOffer] = useState({
     category: "",
     title: "",
     description: "",
     price: "",
-    originalPrice: "",
+    original_price: "",
     discount: "",
     validity: "",
     highlight: "",
     limited: false
+  });
+
+  // Fetch offers from Supabase
+  const { data: offers = [], isLoading, error } = useQuery({
+    queryKey: ['special_offers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('special_offers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as OfferData[];
+    }
+  });
+
+  // Add offer mutation
+  const addOfferMutation = useMutation({
+    mutationFn: async (offerData: any) => {
+      const { data, error } = await supabase
+        .from('special_offers')
+        .insert([offerData])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['special_offers'] });
+      toast({
+        title: "Success",
+        description: "Offer added successfully!"
+      });
+      setNewOffer({
+        category: "",
+        title: "",
+        description: "",
+        price: "",
+        original_price: "",
+        discount: "",
+        validity: "",
+        highlight: "",
+        limited: false
+      });
+      setIsAddDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add offer: " + error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete offer mutation
+  const deleteOfferMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('special_offers')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['special_offers'] });
+      toast({
+        title: "Success",
+        description: "Offer deleted successfully!"
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete offer: " + error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const handleAddOffer = () => {
@@ -86,53 +145,48 @@ const AdminOffers = () => {
 
     // Calculate discount if not provided
     let discount = newOffer.discount ? parseInt(newOffer.discount) : 0;
-    if (!discount && newOffer.originalPrice && newOffer.price) {
-      const original = parseFloat(newOffer.originalPrice.replace(/,/g, ''));
+    if (!discount && newOffer.original_price && newOffer.price) {
+      const original = parseFloat(newOffer.original_price.replace(/,/g, ''));
       const current = parseFloat(newOffer.price.replace(/,/g, ''));
       if (original > current) {
         discount = Math.round(((original - current) / original) * 100);
       }
     }
 
-    // Add new offer with a unique ID
-    const updatedOffers = [
-      ...offers,
-      {
-        id: offers.length + 1,
-        ...newOffer,
-        discount
-      }
-    ];
+    const offerData = {
+      category: newOffer.category,
+      title: newOffer.title,
+      description: newOffer.description,
+      price: newOffer.price,
+      original_price: newOffer.original_price || null,
+      discount: discount || null,
+      validity: newOffer.validity || null,
+      highlight: newOffer.highlight || null,
+      limited: newOffer.limited
+    };
 
-    setOffers(updatedOffers);
-    setNewOffer({
-      category: "",
-      title: "",
-      description: "",
-      price: "",
-      originalPrice: "",
-      discount: "",
-      validity: "",
-      highlight: "",
-      limited: false
-    });
-    setIsAddDialogOpen(false);
-
-    toast({
-      title: "Success",
-      description: "Offer added successfully!"
-    });
+    addOfferMutation.mutate(offerData);
   };
 
-  const handleDeleteOffer = (id: number) => {
-    const updatedOffers = offers.filter(offer => offer.id !== id);
-    setOffers(updatedOffers);
-
-    toast({
-      title: "Success",
-      description: "Offer deleted successfully!"
-    });
+  const handleDeleteOffer = (id: string) => {
+    deleteOfferMutation.mutate(id);
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg">Loading offers...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg text-red-600">Error loading offers: {error.message}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -195,8 +249,8 @@ const AdminOffers = () => {
                   <Label htmlFor="originalPrice">Original Price (₹)</Label>
                   <Input 
                     id="originalPrice" 
-                    value={newOffer.originalPrice}
-                    onChange={(e) => setNewOffer({...newOffer, originalPrice: e.target.value})}
+                    value={newOffer.original_price}
+                    onChange={(e) => setNewOffer({...newOffer, original_price: e.target.value})}
                     placeholder="e.g. 32,500" 
                   />
                 </div>
@@ -240,8 +294,12 @@ const AdminOffers = () => {
                 />
                 <Label htmlFor="limited" className="text-sm font-normal">Limited Time Offer</Label>
               </div>
-              <Button className="w-full mt-4 bg-travel-blue hover:bg-travel-blue-dark" onClick={handleAddOffer}>
-                Add Offer
+              <Button 
+                className="w-full mt-4 bg-travel-blue hover:bg-travel-blue-dark" 
+                onClick={handleAddOffer}
+                disabled={addOfferMutation.isPending}
+              >
+                {addOfferMutation.isPending ? "Adding..." : "Add Offer"}
               </Button>
             </div>
           </DialogContent>
@@ -273,11 +331,11 @@ const AdminOffers = () => {
                   </div>
                   
                   <div className="flex items-center">
-                    {offer.originalPrice && (
-                      <span className="line-through text-gray-400 mr-2">₹{offer.originalPrice}</span>
+                    {offer.original_price && (
+                      <span className="line-through text-gray-400 mr-2">₹{offer.original_price}</span>
                     )}
                     <span className="text-xl font-bold text-travel-blue">₹{offer.price}</span>
-                    {offer.discount > 0 && (
+                    {offer.discount && offer.discount > 0 && (
                       <span className="ml-2 flex items-center text-green-600 text-sm font-medium">
                         <Percent size={14} className="mr-1" /> {offer.discount}% off
                       </span>
@@ -293,8 +351,10 @@ const AdminOffers = () => {
                     size="sm" 
                     className="text-red-500 hover:text-white hover:bg-red-500"
                     onClick={() => handleDeleteOffer(offer.id)}
+                    disabled={deleteOfferMutation.isPending}
                   >
-                    <Trash2 size={16} className="mr-1" /> Delete
+                    <Trash2 size={16} className="mr-1" /> 
+                    {deleteOfferMutation.isPending ? "Deleting..." : "Delete"}
                   </Button>
                 </div>
               </div>
@@ -302,6 +362,14 @@ const AdminOffers = () => {
           </div>
         ))}
       </div>
+
+      {/* No Offers Message */}
+      {offers.length === 0 && (
+        <div className="text-center py-12 bg-gray-50 border border-dashed border-gray-300 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-600">No offers found</h3>
+          <p className="text-gray-500 mt-1">Click "Add New Offer" to create your first offer</p>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,61 +14,110 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import ImageUpload from '@/components/admin/ImageUpload';
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-// Sample data structure for packages
 interface PackageData {
   id: string;
   title: string;
   description: string;
   price: string;
   duration: string;
-  imageUrl: string;
+  image_url: string;
 }
 
-// Sample packages data
-const initialPackages: PackageData[] = [
-  {
-    id: "pkg-001",
-    title: "Kerala Backwaters",
-    description: "Experience the serene backwaters of Kerala with this 5-day tour package.",
-    price: "₹24,999",
-    duration: "5 days, 4 nights",
-    imageUrl: "https://images.unsplash.com/photo-1602215399818-8747805976a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  },
-  {
-    id: "pkg-002",
-    title: "Goa Beach Vacation",
-    description: "Relax on the beautiful beaches of Goa with this all-inclusive package.",
-    price: "₹18,500",
-    duration: "4 days, 3 nights",
-    imageUrl: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  },
-  {
-    id: "pkg-003",
-    title: "Rajasthan Heritage Tour",
-    description: "Explore the rich cultural heritage and royal palaces of Rajasthan.",
-    price: "₹32,999",
-    duration: "7 days, 6 nights",
-    imageUrl: "https://images.unsplash.com/photo-1599661046289-e31897846e41?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  }
-];
-
 const AdminPackages = () => {
-  const [packages, setPackages] = useState<PackageData[]>(initialPackages);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const [newPackage, setNewPackage] = useState<Omit<PackageData, 'id'>>({
     title: '',
     description: '',
     price: '',
     duration: '',
-    imageUrl: ''
+    image_url: ''
+  });
+
+  // Fetch packages from Supabase
+  const { data: packages = [], isLoading, error } = useQuery({
+    queryKey: ['travel_packages'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('travel_packages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data as PackageData[];
+    }
+  });
+
+  // Add package mutation
+  const addPackageMutation = useMutation({
+    mutationFn: async (packageData: Omit<PackageData, 'id'>) => {
+      const { data, error } = await supabase
+        .from('travel_packages')
+        .insert([packageData])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['travel_packages'] });
+      toast({
+        title: "Success",
+        description: "Package added successfully",
+      });
+      setIsAddingNew(false);
+      setNewPackage({
+        title: '',
+        description: '',
+        price: '',
+        duration: '',
+        image_url: ''
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add package: " + error.message,
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Delete package mutation
+  const deletePackageMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from('travel_packages')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['travel_packages'] });
+      toast({
+        title: "Success",
+        description: "Package deleted successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete package: " + error.message,
+        variant: "destructive"
+      });
+    }
   });
   
   const handleAddNewSubmit = () => {
-    if (!newPackage.title || !newPackage.description || !newPackage.price || !newPackage.duration || !newPackage.imageUrl) {
+    if (!newPackage.title || !newPackage.description || !newPackage.price || !newPackage.duration || !newPackage.image_url) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -77,52 +126,44 @@ const AdminPackages = () => {
       return;
     }
 
-    const newId = `pkg-${(packages.length + 1).toString().padStart(3, '0')}`;
-    setPackages([...packages, { ...newPackage, id: newId }]);
-    setIsAddingNew(false);
-    setNewPackage({
-      title: '',
-      description: '',
-      price: '',
-      duration: '',
-      imageUrl: ''
-    });
-
-    toast({
-      title: "Success",
-      description: "Package added successfully",
-    });
-    
-    // In a real app, this would also update the database
+    addPackageMutation.mutate(newPackage);
   };
   
   const handleDeletePackage = (id: string) => {
-    // In a real app, this would confirm deletion and delete from database
-    setPackages(packages.filter(pkg => pkg.id !== id));
-    toast({
-      title: "Success",
-      description: "Package deleted successfully",
-    });
+    deletePackageMutation.mutate(id);
   };
   
   const handleSaveEdit = (id: string, editedData: Partial<PackageData>) => {
-    // In a real app, this would update the database
-    setPackages(packages.map(pkg => 
-      pkg.id === id ? { ...pkg, ...editedData } : pkg
-    ));
+    // TODO: Implement edit functionality
     setIsEditing(null);
     toast({
-      title: "Success",
-      description: "Package updated successfully",
+      title: "Info",
+      description: "Edit functionality will be implemented soon",
     });
   };
 
   const handleImageUpload = (imageUrl: string) => {
     setNewPackage({
       ...newPackage,
-      imageUrl
+      image_url: imageUrl
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg">Loading packages...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <div className="text-lg text-red-600">Error loading packages: {error.message}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -191,8 +232,12 @@ const AdminPackages = () => {
           </CardContent>
           <CardFooter className="flex justify-end space-x-2">
             <Button variant="outline" onClick={() => setIsAddingNew(false)}>Cancel</Button>
-            <Button onClick={handleAddNewSubmit} className="bg-travel-blue hover:bg-travel-blue-dark">
-              Save Package
+            <Button 
+              onClick={handleAddNewSubmit} 
+              className="bg-travel-blue hover:bg-travel-blue-dark"
+              disabled={addPackageMutation.isPending}
+            >
+              {addPackageMutation.isPending ? "Saving..." : "Save Package"}
             </Button>
           </CardFooter>
         </Card>
@@ -204,7 +249,7 @@ const AdminPackages = () => {
           <Card key={pkg.id} className="overflow-hidden">
             <div className="h-48 overflow-hidden">
               <img 
-                src={pkg.imageUrl} 
+                src={pkg.image_url} 
                 alt={pkg.title}
                 className="w-full h-full object-cover transition-transform hover:scale-105" 
               />
@@ -221,7 +266,13 @@ const AdminPackages = () => {
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={() => setIsEditing(pkg.id)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDeletePackage(pkg.id)}>Delete</Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDeletePackage(pkg.id)}
+                disabled={deletePackageMutation.isPending}
+              >
+                {deletePackageMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
             </CardFooter>
           </Card>
         ))}

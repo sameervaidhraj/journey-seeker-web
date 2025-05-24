@@ -9,7 +9,84 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      special_offers: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          discount: number | null
+          highlight: string | null
+          id: string
+          limited: boolean | null
+          original_price: string | null
+          price: string
+          title: string
+          updated_at: string
+          validity: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          limited?: boolean | null
+          original_price?: string | null
+          price: string
+          title: string
+          updated_at?: string
+          validity?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          limited?: boolean | null
+          original_price?: string | null
+          price?: string
+          title?: string
+          updated_at?: string
+          validity?: string | null
+        }
+        Relationships: []
+      }
+      travel_packages: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string
+          id: string
+          image_url: string
+          price: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration: string
+          id?: string
+          image_url: string
+          price: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string
+          id?: string
+          image_url?: string
+          price?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
