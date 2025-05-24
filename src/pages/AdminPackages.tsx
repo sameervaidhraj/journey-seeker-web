@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -67,7 +66,9 @@ const AdminPackages = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate both admin and homepage queries for instant updates
       queryClient.invalidateQueries({ queryKey: ['travel_packages'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage_packages'] });
       toast({
         title: "Success",
         description: "Package added successfully",
@@ -101,7 +102,9 @@ const AdminPackages = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate both admin and homepage queries for instant updates
       queryClient.invalidateQueries({ queryKey: ['travel_packages'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage_packages'] });
       toast({
         title: "Success",
         description: "Package deleted successfully",

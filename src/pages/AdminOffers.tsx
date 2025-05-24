@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
@@ -79,7 +78,10 @@ const AdminOffers = () => {
       return data;
     },
     onSuccess: () => {
+      // Invalidate both admin and homepage queries for instant updates
       queryClient.invalidateQueries({ queryKey: ['special_offers'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage_offers'] });
+      queryClient.invalidateQueries({ queryKey: ['public_special_offers'] });
       toast({
         title: "Success",
         description: "Offer added successfully!"
@@ -117,7 +119,10 @@ const AdminOffers = () => {
       if (error) throw error;
     },
     onSuccess: () => {
+      // Invalidate both admin and homepage queries for instant updates
       queryClient.invalidateQueries({ queryKey: ['special_offers'] });
+      queryClient.invalidateQueries({ queryKey: ['homepage_offers'] });
+      queryClient.invalidateQueries({ queryKey: ['public_special_offers'] });
       toast({
         title: "Success",
         description: "Offer deleted successfully!"
