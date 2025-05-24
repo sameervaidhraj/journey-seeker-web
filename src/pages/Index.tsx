@@ -1,6 +1,7 @@
 
 import React from 'react';
 import HeroSection from '@/components/HeroSection';
+import SearchForm from '@/components/SearchForm';
 import PackageCard from '@/components/PackageCard';
 import SpecialOffers from '@/components/SpecialOffers';
 import Testimonials from '@/components/Testimonials';
@@ -35,6 +36,7 @@ const Index = () => {
   return (
     <div>
       <HeroSection />
+      <SearchForm />
       
       {/* Popular Packages Section */}
       <section className="py-16 bg-gray-50">
