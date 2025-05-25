@@ -213,11 +213,11 @@ const AdminOffers = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="originalPrice">Original Price (₹)</Label>
+                  <Label htmlFor="original_price">Original Price (₹)</Label>
                   <Input 
-                    id="originalPrice" 
-                    value={newOffer.originalPrice}
-                    onChange={(e) => setNewOffer({...newOffer, originalPrice: e.target.value})}
+                    id="original_price" 
+                    value={newOffer.original_price}
+                    onChange={(e) => setNewOffer({...newOffer, original_price: e.target.value})}
                     placeholder="e.g. 32,500" 
                   />
                 </div>
