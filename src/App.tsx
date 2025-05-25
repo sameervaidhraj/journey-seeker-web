@@ -161,6 +161,10 @@ const App = () => {
                 <Route path="/hotels" element={<Hotels />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
+                <Route path="/terms" element={<Terms />} />
                 
                 {/* Public Admin Routes */}
                 <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
