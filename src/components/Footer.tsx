@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="grid md:grid-cols-4 gap-8">
           {/* About Us */}
           <div>
-            <h3 className="text-2xl font-bold text-white mb-4">ASB<span className="text-travel-orange">Travels</span></h3>
+            <h3 className="text-2xl font-bold text-white mb-4">ASB <span className="text-travel-orange">Travels</span></h3>
             <p className="mb-4 text-gray-400">
               We specialize in providing the best travel experiences across India. Our mission is to help you discover the beauty of India with comfort and convenience.
             </p>
@@ -39,7 +39,7 @@ const Footer = () => {
               <li><Link to="/hotels" className="text-gray-400 hover:text-white">Hotel Reservation</Link></li>
               <li><Link to="/offers" className="text-gray-400 hover:text-white">Special Offers</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Terms & Conditions</a></li>
+              <li><Link to="/terms" className="text-gray-400 hover:text-white">Terms & Conditions</Link></li>
             </ul>
           </div>
 
@@ -47,10 +47,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-gray-400 hover:text-white">FAQ</a></li>
+              <li><Link to="/faq" className="text-gray-400 hover:text-white">FAQ</Link></li>
               <li><Link to="/contact" className="text-gray-400 hover:text-white">Contact Us</Link></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Privacy Policy</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white">Refund Policy</a></li>
+              <li><Link to="/privacy-policy" className="text-gray-400 hover:text-white">Privacy Policy</Link></li>
+              <li><Link to="/refund-policy" className="text-gray-400 hover:text-white">Refund Policy</Link></li>
               <li><Link to="/login" className="text-gray-400 hover:text-white">User Login</Link></li>
               <li><Link to="/admin-login" className="text-gray-400 hover:text-white">Admin Login</Link></li>
             </ul>
@@ -63,21 +63,25 @@ const Footer = () => {
               <li className="flex items-start">
                 <MapPin size={18} className="mr-2 mt-0.5 text-travel-orange" />
                 <span className="text-gray-400">
-                  123 Travel Street, City Center, New Delhi, 110001, India
+                  Silicon City, Indore, Madhya Pradesh, India, 452013
                 </span>
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-2 text-travel-orange" />
-                <span className="text-gray-400">+91 98765 43210</span>
+                <a href="tel:+919993416639" className="text-gray-400 hover:text-white">
+                  +91 99934 16639
+                </a>
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 text-travel-orange" />
-                <span className="text-gray-400">info@asbtravels.com</span>
+                <a href="mailto:asbtravelssjp@gmail.com" className="text-gray-400 hover:text-white">
+                  asbtravelssjp@gmail.com
+                </a>
               </li>
               <li className="flex items-center">
                 <MessageSquare size={18} className="mr-2 text-travel-orange" />
-                <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
-                  WhatsApp: +91 98765 43210
+                <a href="https://wa.me/919993416639" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white">
+                  WhatsApp: +91 99934 16639
                 </a>
               </li>
             </ul>
@@ -89,15 +93,15 @@ const Footer = () => {
             &copy; {new Date().getFullYear()} ASB Travels. All Rights Reserved.
           </p>
           <div className="flex space-x-4">
-            <a href="#" className="text-gray-400 hover:text-white text-sm">
+            <Link to="/privacy-policy" className="text-gray-400 hover:text-white text-sm">
               Privacy Policy
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white text-sm">
+            </Link>
+            <Link to="/terms" className="text-gray-400 hover:text-white text-sm">
               Terms of Service
-            </a>
-            <a href="#" className="text-gray-400 hover:text-white text-sm">
-              Cookie Policy
-            </a>
+            </Link>
+            <Link to="/refund-policy" className="text-gray-400 hover:text-white text-sm">
+              Refund Policy
+            </Link>
           </div>
         </div>
       </div>

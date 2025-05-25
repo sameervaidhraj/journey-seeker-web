@@ -109,8 +109,8 @@ const Contact = () => {
                     <MapPin className="mr-3 h-6 w-6 text-travel-orange" />
                     <div>
                       <p className="font-semibold">Our Location</p>
-                      <p>123 Travel Street, City Center</p>
-                      <p>New Delhi, 110001, India</p>
+                      <p>Silicon City, Indore</p>
+                      <p>Madhya Pradesh, India, 452013</p>
                     </div>
                   </div>
                   
@@ -118,7 +118,9 @@ const Contact = () => {
                     <Phone className="mr-3 h-6 w-6 text-travel-orange" />
                     <div>
                       <p className="font-semibold">Phone Number</p>
-                      <p>+91 98765 43210</p>
+                      <a href="tel:+919993416639" className="hover:text-travel-orange transition-colors">
+                        +91 99934 16639
+                      </a>
                     </div>
                   </div>
                   
@@ -126,7 +128,9 @@ const Contact = () => {
                     <Mail className="mr-3 h-6 w-6 text-travel-orange" />
                     <div>
                       <p className="font-semibold">Email Address</p>
-                      <p>info@asbtravels.com</p>
+                      <a href="mailto:asbtravelssjp@gmail.com" className="hover:text-travel-orange transition-colors">
+                        asbtravelssjp@gmail.com
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -136,11 +140,11 @@ const Contact = () => {
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">Connect With Us</h2>
                 
                 <div className="space-y-4">
-                  <a href="https://wa.me/919876543210" target="_blank" rel="noopener noreferrer" className="flex items-center p-3 border rounded-md hover:bg-gray-50 transition-colors">
+                  <a href="https://wa.me/919993416639" target="_blank" rel="noopener noreferrer" className="flex items-center p-3 border rounded-md hover:bg-gray-50 transition-colors">
                     <MessageSquare className="mr-3 h-6 w-6 text-green-500" />
                     <div>
                       <p className="font-semibold text-gray-800">WhatsApp</p>
-                      <p className="text-gray-600 text-sm">+91 98765 43210</p>
+                      <p className="text-gray-600 text-sm">+91 99934 16639</p>
                     </div>
                   </a>
                   

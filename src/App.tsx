@@ -15,6 +15,10 @@ import Flights from "./pages/Flights";
 import Hotels from "./pages/Hotels";
 import Offers from "./pages/Offers";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Terms from "./pages/Terms";
 
 // Admin Pages
 import AdminLogin from "./pages/AdminLogin";
