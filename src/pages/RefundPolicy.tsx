@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -74,8 +73,8 @@ const RefundPolicy = () => {
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact for Cancellations</h2>
               <div className="bg-gray-50 p-4 rounded-lg">
                 <p className="mb-2">To cancel your booking or inquire about refunds:</p>
-                <p><strong>Email:</strong> <a href="mailto:asbtravelssjp@gmail.com" className="text-travel-blue hover:underline">asbtravelssjp@gmail.com</a></p>
-                <p><strong>Phone:</strong> <a href="tel:+919993416639" className="text-travel-blue hover:underline">+91 99934 16639</a></p>
+                <p><strong>Email:</strong> asbtravelssjp@gmail.com</p>
+                <p><strong>Phone:</strong> +91 99934 16639</p>
                 <p><strong>WhatsApp:</strong> <a href="https://wa.me/919993416639" className="text-travel-blue hover:underline">+91 99934 16639</a></p>
               </div>
 

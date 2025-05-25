@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -62,8 +61,8 @@ const PrivacyPolicy = () => {
                 If you have any questions about this Privacy Policy or our data practices, please contact us:
               </p>
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p><strong>Email:</strong> <a href="mailto:asbtravelssjp@gmail.com" className="text-travel-blue hover:underline">asbtravelssjp@gmail.com</a></p>
-                <p><strong>Phone:</strong> <a href="tel:+919993416639" className="text-travel-blue hover:underline">+91 99934 16639</a></p>
+                <p><strong>Email:</strong> asbtravelssjp@gmail.com</p>
+                <p><strong>Phone:</strong> +91 99934 16639</p>
                 <p><strong>Address:</strong> Silicon City, Indore, Madhya Pradesh, India, 452013</p>
               </div>
 

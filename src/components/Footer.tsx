@@ -68,15 +68,11 @@ const Footer = () => {
               </li>
               <li className="flex items-center">
                 <Phone size={18} className="mr-2 text-travel-orange" />
-                <a href="tel:+919993416639" className="text-gray-400 hover:text-white">
-                  +91 99934 16639
-                </a>
+                <span className="text-gray-400">+91 99934 16639</span>
               </li>
               <li className="flex items-center">
                 <Mail size={18} className="mr-2 text-travel-orange" />
-                <a href="mailto:asbtravelssjp@gmail.com" className="text-gray-400 hover:text-white">
-                  asbtravelssjp@gmail.com
-                </a>
+                <span className="text-gray-400">asbtravelssjp@gmail.com</span>
               </li>
               <li className="flex items-center">
                 <MessageSquare size={18} className="mr-2 text-travel-orange" />

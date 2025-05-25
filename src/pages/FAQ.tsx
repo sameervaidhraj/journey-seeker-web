@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -80,18 +79,12 @@ const FAQ = () => {
           <div className="text-center mt-8">
             <p className="text-gray-600 mb-4">Still have questions?</p>
             <div className="space-x-4">
-              <a
-                href="tel:+919993416639"
-                className="inline-block bg-travel-blue text-white px-6 py-2 rounded-lg hover:bg-travel-blue-dark transition-colors"
-              >
-                Call Us
-              </a>
-              <a
-                href="mailto:asbtravelssjp@gmail.com"
-                className="inline-block bg-travel-orange text-white px-6 py-2 rounded-lg hover:opacity-90 transition-colors"
-              >
-                Email Us
-              </a>
+              <span className="inline-block bg-travel-blue text-white px-6 py-2 rounded-lg">
+                Call Us: +91 99934 16639
+              </span>
+              <span className="inline-block bg-travel-orange text-white px-6 py-2 rounded-lg">
+                Email Us: asbtravelssjp@gmail.com
+              </span>
             </div>
           </div>
         </div>
