@@ -28,6 +28,7 @@ import AdminPackages from "./pages/AdminPackages";
 import AdminHotels from "./pages/AdminHotels";
 import AdminFlights from "./pages/AdminFlights";
 import AdminOffers from "./pages/AdminOffers";
+import AdminSecretLogin from "./pages/AdminSecretLogin";
 
 // Shared Pages
 import NotFound from "./pages/NotFound";
@@ -170,6 +171,7 @@ const App = () => {
                 <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/register" element={<AdminRegister />} />
+                <Route path="/admin-secret-entrance" element={<AdminSecretLogin />} />
                 
                 {/* Protected Admin Routes */}
                 <Route element={<ProtectedAdminRoute />}>

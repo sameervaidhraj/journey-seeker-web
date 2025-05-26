@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
@@ -10,6 +9,7 @@ import Testimonials from '@/components/Testimonials';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface Package {
   id: string;
@@ -22,6 +22,34 @@ interface Package {
 
 const Index = () => {
   const [packages, setPackages] = useState<Package[]>([]);
+  const [email, setEmail] = useState('');
+  const { toast } = useToast();
+
+  const handleSubscribe = () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to subscribe.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    toast({
+      title: "Subscribed Successfully!",
+      description: "Thank you for subscribing to our newsletter. You'll receive the latest travel deals and updates.",
+    });
+    setEmail('');
+  };
 
   useEffect(() => {
     // Fetch initial packages
@@ -180,9 +208,14 @@ const Index = () => {
                 <input
                   type="email"
                   placeholder="Enter your email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="px-4 py-3 rounded-lg flex-grow focus:outline-none"
                 />
-                <Button className="bg-travel-orange hover:bg-travel-orange/90 whitespace-nowrap">
+                <Button 
+                  className="bg-travel-orange hover:bg-travel-orange/90 whitespace-nowrap"
+                  onClick={handleSubscribe}
+                >
                   Subscribe Now
                 </Button>
               </div>

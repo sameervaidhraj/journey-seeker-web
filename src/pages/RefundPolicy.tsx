@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -47,12 +48,6 @@ const RefundPolicy = () => {
                 <li>Pre-booked activities and experiences</li>
                 <li>Peak season and festival bookings (special terms apply)</li>
               </ul>
-
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">Medical Emergency Cancellations</h2>
-              <p className="mb-6">
-                In case of medical emergencies or unforeseen circumstances, we may consider special refund terms on a 
-                case-by-case basis. Valid medical certificates or documentation will be required.
-              </p>
 
               <h2 className="text-2xl font-semibold text-gray-800 mb-4">Refund Process</h2>
               <p className="mb-4">To request a refund:</p>
