@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
@@ -23,7 +23,7 @@ const AdminLogin = () => {
   const [isFormComplete, setIsFormComplete] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAdminAuth();
+  const { login, isAuthenticated, loading } = useAdminAuth();
 
   // Check if form is complete
   useEffect(() => {
@@ -32,10 +32,10 @@ const AdminLogin = () => {
 
   // If already authenticated, redirect to admin dashboard
   useEffect(() => {
-    if (isAuthenticated) {
+    if (!loading && isAuthenticated) {
       navigate('/admin/dashboard');
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, loading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +55,18 @@ const AdminLogin = () => {
       navigate('/admin/dashboard');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
+          <div className="text-lg">Loading...</div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -83,12 +95,7 @@ const AdminLogin = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <Label htmlFor="password">Password *</Label>
-                    <a href="/admin/forgot-password" className="text-sm text-travel-orange hover:underline">
-                      Forgot password?
-                    </a>
-                  </div>
+                  <Label htmlFor="password">Password *</Label>
                   <Input 
                     id="password" 
                     type="password" 
@@ -112,9 +119,9 @@ const AdminLogin = () => {
             </CardContent>
             <CardFooter className="flex justify-center">
               <div className="text-center text-sm text-gray-600">
-                Need an admin account?{" "}
-                <a href="/admin/register" className="text-travel-orange hover:underline">
-                  Register as Admin
+                Need help accessing your account?{" "}
+                <a href="/contact" className="text-travel-orange hover:underline">
+                  Contact Support
                 </a>
               </div>
             </CardFooter>

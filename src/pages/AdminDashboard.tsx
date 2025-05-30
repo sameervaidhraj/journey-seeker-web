@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -8,24 +9,38 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
-import { Plane, Building2, Package, Tag, LogOut, Bell, User, Calendar, CreditCard } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
+import { Plane, Building2, Package, Tag, LogOut, Bell, User, Calendar, CreditCard, Users, CheckCircle } from 'lucide-react';
 import AdminPackages from './AdminPackages';
 import AdminHotels from './AdminHotels';
 import AdminFlights from './AdminFlights';
 import AdminOffers from './AdminOffers';
+import UserManagement from '@/components/admin/UserManagement';
+import ApprovalManagement from '@/components/admin/ApprovalManagement';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("dashboard");
-  const { logout, adminUser } = useAdminAuth();
+  const { logout, adminUser, loading } = useAdminAuth();
 
   const handleLogout = () => {
     logout();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!adminUser) {
+    navigate('/admin/login');
+    return null;
+  }
 
   // Sample data for the admin dashboard
   const dashboardData = {
@@ -52,6 +67,10 @@ const AdminDashboard = () => {
         return <AdminFlights />;
       case "offers":
         return <AdminOffers />;
+      case "users":
+        return <UserManagement />;
+      case "approvals":
+        return <ApprovalManagement />;
       default:
         // Dashboard tab content
         return (
@@ -145,6 +164,7 @@ const AdminDashboard = () => {
       <div className="hidden md:flex flex-col w-64 bg-white border-r">
         <div className="px-6 py-5 border-b">
           <h1 className="text-xl font-bold text-travel-blue">ASB Travels <span className="text-travel-orange">Admin</span></h1>
+          <p className="text-sm text-gray-500 mt-1">{adminUser.role.replace('_', ' ')} - {adminUser.name}</p>
         </div>
         <div className="flex-1 py-6 px-4 space-y-1">
           <button 
@@ -161,6 +181,36 @@ const AdminDashboard = () => {
             </span>
             Dashboard
           </button>
+          
+          {adminUser.role === 'super_admin' && (
+            <>
+              <button 
+                onClick={() => setActiveTab("users")}
+                className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "users" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}
+              >
+                <Users size={16} className="mr-3" />
+                User Management
+              </button>
+              <button 
+                onClick={() => setActiveTab("approvals")}
+                className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "approvals" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}
+              >
+                <CheckCircle size={16} className="mr-3" />
+                Pending Approvals
+              </button>
+            </>
+          )}
+          
+          {['super_admin', 'admin'].includes(adminUser.role) && (
+            <button 
+              onClick={() => setActiveTab("approvals")}
+              className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "approvals" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}
+            >
+              <CheckCircle size={16} className="mr-3" />
+              Pending Approvals
+            </button>
+          )}
+          
           <button 
             onClick={() => setActiveTab("packages")}
             className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "packages" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}
@@ -242,6 +292,14 @@ const AdminDashboard = () => {
             >
               Dashboard
             </button>
+            {adminUser.role === 'super_admin' && (
+              <button 
+                onClick={() => setActiveTab("users")}
+                className={`flex-shrink-0 px-3 py-1 text-sm rounded-md mr-2 ${activeTab === "users" ? "bg-travel-blue text-white" : "bg-gray-100 text-gray-700"}`}
+              >
+                Users
+              </button>
+            )}
             <button 
               onClick={() => setActiveTab("packages")}
               className={`flex-shrink-0 px-3 py-1 text-sm rounded-md mr-2 ${activeTab === "packages" ? "bg-travel-blue text-white" : "bg-gray-100 text-gray-700"}`}
