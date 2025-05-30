@@ -188,6 +188,56 @@ export type Database = {
           },
         ]
       }
+      reviews: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          package_name: string | null
+          rating: number
+          review_text: string
+          status: string | null
+          updated_at: string | null
+          user_image: string | null
+          user_location: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          package_name?: string | null
+          rating: number
+          review_text: string
+          status?: string | null
+          updated_at?: string | null
+          user_image?: string | null
+          user_location?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          package_name?: string | null
+          rating?: number
+          review_text?: string
+          status?: string | null
+          updated_at?: string | null
+          user_image?: string | null
+          user_location?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       special_offers: {
         Row: {
           category: string
