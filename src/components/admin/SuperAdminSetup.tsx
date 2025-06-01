@@ -22,16 +22,45 @@ const SuperAdminSetup = () => {
         options: {
           data: {
             name: 'ASB Travels Super Admin'
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/admin/login`
         }
       });
 
       if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        // If user already exists, try to update their role
+        if (error.message.includes('already registered')) {
+          const { error: updateError } = await supabase
+            .from('app_users')
+            .upsert({ 
+              email: 'asbtravelssjp@gmail.com',
+              role: 'super_admin',
+              status: 'active',
+              name: 'ASB Travels Super Admin'
+            }, {
+              onConflict: 'email'
+            });
+
+          if (updateError) {
+            console.error('Error updating user role:', updateError);
+            toast({
+              title: "Info", 
+              description: "User already exists. Please try logging in with your credentials.",
+            });
+          } else {
+            toast({
+              title: "Success",
+              description: "Super admin role updated! You can now login.",
+            });
+            setSetupComplete(true);
+          }
+        } else {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return;
       }
 
@@ -47,18 +76,18 @@ const SuperAdminSetup = () => {
               status: 'active',
               name: 'ASB Travels Super Admin'
             })
-            .eq('auth_user_id', data.user.id);
+            .eq('email', 'asbtravelssjp@gmail.com');
 
           if (updateError) {
             console.error('Error updating user role:', updateError);
           }
-        }, 1000);
+        }, 2000);
       }
 
       setSetupComplete(true);
       toast({
         title: "Success",
-        description: "Super admin account created successfully! You can now login with asbtravelssjp@gmail.com",
+        description: "Super admin account created successfully! Check your email to confirm, then you can login.",
       });
 
     } catch (error: any) {
@@ -121,6 +150,9 @@ const SuperAdminSetup = () => {
           >
             {isLoading ? "Creating Account..." : "Create Super Admin Account"}
           </Button>
+          <div className="text-xs text-gray-500">
+            <p>Note: You may need to confirm your email before logging in.</p>
+          </div>
         </div>
       </CardContent>
     </Card>

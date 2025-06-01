@@ -78,17 +78,50 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fetchUserProfile = async (user: User) => {
     try {
-      const { data: appUser, error } = await supabase
+      // First try to get the user by auth_user_id
+      let { data: appUser, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('auth_user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      // If not found by auth_user_id, try by email
+      if (!appUser && !error) {
+        const { data: userByEmail, error: emailError } = await supabase
+          .from('app_users')
+          .select('*')
+          .eq('email', user.email)
+          .maybeSingle();
+        
+        appUser = userByEmail;
+        error = emailError;
+
+        // If found by email but missing auth_user_id, update it
+        if (appUser && !appUser.auth_user_id) {
+          await supabase
+            .from('app_users')
+            .update({ auth_user_id: user.id })
+            .eq('id', appUser.id);
+          
+          appUser.auth_user_id = user.id;
+        }
+      }
 
       if (error) {
         console.error('Error fetching user profile:', error);
         toast({
           title: "Access Denied",
           description: "You don't have admin access to this system.",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
+        return;
+      }
+
+      if (!appUser) {
+        toast({
+          title: "Account Not Found",
+          description: "No admin account found for this email.",
           variant: "destructive",
         });
         await supabase.auth.signOut();
