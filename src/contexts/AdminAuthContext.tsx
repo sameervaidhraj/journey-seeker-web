@@ -107,11 +107,52 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       }
 
+      // If no app_users record exists, create one with default viewer role
+      // This handles manually created users in Supabase
+      if (!appUser && !error) {
+        console.log('Creating new app_users record for manually created user');
+        
+        // Check if this is the super admin email
+        const isSuperAdmin = user.email === 'asbtravelssjp@gmail.com';
+        
+        const { data: newAppUser, error: insertError } = await supabase
+          .from('app_users')
+          .insert({
+            auth_user_id: user.id,
+            name: user.user_metadata?.name || user.email || 'Unknown User',
+            email: user.email,
+            role: isSuperAdmin ? 'super_admin' : 'viewer',
+            status: 'active'
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error creating app_users record:', insertError);
+          toast({
+            title: "Setup Error",
+            description: "Failed to set up user profile. Please contact support.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          return;
+        }
+
+        appUser = newAppUser;
+        
+        if (isSuperAdmin) {
+          toast({
+            title: "Welcome Super Admin",
+            description: "Your super admin account has been set up successfully!",
+          });
+        }
+      }
+
       if (error) {
         console.error('Error fetching user profile:', error);
         toast({
-          title: "Access Denied",
-          description: "You don't have admin access to this system.",
+          title: "Access Error",
+          description: "There was an error accessing your account. Please try again.",
           variant: "destructive",
         });
         await supabase.auth.signOut();
@@ -120,8 +161,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (!appUser) {
         toast({
-          title: "Account Not Found",
-          description: "No admin account found for this email.",
+          title: "Account Setup Required",
+          description: "Your account needs to be set up. Please contact an administrator.",
           variant: "destructive",
         });
         await supabase.auth.signOut();
@@ -146,6 +187,13 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         status: appUser.status,
       });
       setIsAuthenticated(true);
+      
+      console.log('User authenticated successfully:', {
+        role: appUser.role,
+        status: appUser.status,
+        email: appUser.email
+      });
+      
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
       setAdminUser(null);

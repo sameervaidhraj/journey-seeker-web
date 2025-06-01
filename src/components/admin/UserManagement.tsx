@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
+import QuickUserPromotion from './QuickUserPromotion';
 
 interface AppUser {
   id: string;
@@ -219,10 +219,16 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
+      <div>
+        <h2 className="text-2xl font-bold">User Management</h2>
+        <p className="text-gray-600">Manage system users and their permissions</p>
+      </div>
+
+      <QuickUserPromotion />
+
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">User Management</h2>
-          <p className="text-gray-600">Manage system users and their permissions</p>
+          <h3 className="text-lg font-semibold">All Users</h3>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
