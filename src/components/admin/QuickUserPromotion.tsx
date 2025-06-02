@@ -157,9 +157,9 @@ const QuickUserPromotion = () => {
           <div className="text-xs text-gray-500">
             <p>Note: If the user doesn't exist in Supabase Auth, create them there first, then use this tool to assign roles.</p>
           </div>
-        </CardContent>
-      </Card>
-    );
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

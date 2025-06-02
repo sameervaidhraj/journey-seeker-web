@@ -123,7 +123,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         console.log('Creating new app_users record...');
         
         // Check if this is the super admin email
-        const isSuperAdmin = user.email === 'asbtravelssjp@gmail.com';
+        const isSuperAdmin = user.email === 'sameervaidhraj@gmail.com';
         
         const { data: newAppUser, error: insertError } = await supabase
           .from('app_users')
