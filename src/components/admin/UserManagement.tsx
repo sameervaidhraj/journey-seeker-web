@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +29,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
 import QuickUserPromotion from './QuickUserPromotion';
+import UserDebugInfo from './UserDebugInfo';
 
 interface AppUser {
   id: string;
@@ -260,6 +260,8 @@ const UserManagement = () => {
         <h2 className="text-2xl font-bold">User Management</h2>
         <p className="text-gray-600">Manage system users and their permissions</p>
       </div>
+
+      <UserDebugInfo />
 
       <QuickUserPromotion />
 

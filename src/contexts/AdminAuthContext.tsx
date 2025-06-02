@@ -129,7 +129,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           .from('app_users')
           .insert({
             auth_user_id: user.id,
-            name: user.user_metadata?.name || user.email || 'Unknown User',
+            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
             email: user.email,
             role: isSuperAdmin ? 'super_admin' : 'viewer',
             status: 'active'
@@ -139,23 +139,45 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         if (insertError) {
           console.error('Error creating app_users record:', insertError);
-          toast({
-            title: "Setup Error",
-            description: "Failed to set up user profile. Please contact support.",
-            variant: "destructive",
-          });
-          await supabase.auth.signOut();
-          return;
-        }
-
-        appUser = newAppUser;
-        console.log('Created new user:', appUser);
-        
-        if (isSuperAdmin) {
-          toast({
-            title: "Welcome Super Admin",
-            description: "Your super admin account has been set up successfully!",
-          });
+          
+          // If it's a unique constraint error, try to fetch the existing record
+          if (insertError.code === '23505') {
+            const { data: existingUser } = await supabase
+              .from('app_users')
+              .select('*')
+              .eq('email', user.email)
+              .single();
+            
+            if (existingUser) {
+              appUser = existingUser;
+            } else {
+              toast({
+                title: "Setup Error",
+                description: "Failed to set up user profile. Please contact support.",
+                variant: "destructive",
+              });
+              await supabase.auth.signOut();
+              return;
+            }
+          } else {
+            toast({
+              title: "Setup Error",
+              description: "Failed to set up user profile. Please contact support.",
+              variant: "destructive",
+            });
+            await supabase.auth.signOut();
+            return;
+          }
+        } else {
+          appUser = newAppUser;
+          console.log('Created new user:', appUser);
+          
+          if (isSuperAdmin) {
+            toast({
+              title: "Welcome Super Admin",
+              description: "Your super admin account has been set up successfully!",
+            });
+          }
         }
       }
 
@@ -210,6 +232,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
+      toast({
+        title: "Authentication Error",
+        description: "Failed to authenticate. Please try logging in again.",
+        variant: "destructive",
+      });
       setAdminUser(null);
       setIsAuthenticated(false);
     }
