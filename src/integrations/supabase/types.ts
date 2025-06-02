@@ -321,8 +321,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      has_permission: {
-        Args: { required_role: Database["public"]["Enums"]["user_role"] }
+      can_manage_users: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
         Returns: boolean
       }
     }

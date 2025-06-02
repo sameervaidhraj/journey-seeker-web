@@ -40,24 +40,63 @@ const QuickUserPromotion = () => {
 
     setLoading(true);
     try {
-      // Update or create app_users record
-      const { error } = await supabase
+      console.log('Promoting user:', email, 'to role:', role);
+      
+      // First, check if the user exists in app_users by email
+      const { data: existingUser, error: fetchError } = await supabase
         .from('app_users')
-        .upsert({
-          email: email.trim().toLowerCase(),
-          role: role,
-          status: 'active',
-          name: email.split('@')[0], // Default name from email
-        }, {
-          onConflict: 'email'
+        .select('*')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching user:', fetchError);
+        throw fetchError;
+      }
+
+      if (existingUser) {
+        // User exists, update their role
+        console.log('User exists, updating role...');
+        const { error: updateError } = await supabase
+          .from('app_users')
+          .update({ 
+            role: role,
+            status: 'active',
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', email.trim().toLowerCase());
+
+        if (updateError) {
+          console.error('Error updating user role:', updateError);
+          throw updateError;
+        }
+
+        toast({
+          title: "Success",
+          description: `User ${email} has been updated to ${role} role`,
         });
+      } else {
+        // User doesn't exist, create a new record
+        console.log('User does not exist, creating new record...');
+        const { error: insertError } = await supabase
+          .from('app_users')
+          .insert({
+            email: email.trim().toLowerCase(),
+            role: role,
+            status: 'active',
+            name: email.split('@')[0], // Default name from email
+          });
 
-      if (error) throw error;
+        if (insertError) {
+          console.error('Error creating user:', insertError);
+          throw insertError;
+        }
 
-      toast({
-        title: "Success",
-        description: `User ${email} has been promoted to ${role} role`,
-      });
+        toast({
+          title: "Success",
+          description: `New user ${email} has been created with ${role} role. They can now login if they have a Supabase Auth account.`,
+        });
+      }
 
       setEmail('');
       setRole('admin');
@@ -83,7 +122,7 @@ const QuickUserPromotion = () => {
       <CardHeader>
         <CardTitle>Quick User Promotion</CardTitle>
         <CardDescription>
-          Promote existing Supabase users or create new admin accounts
+          Promote existing users or create new admin accounts by email
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -113,14 +152,14 @@ const QuickUserPromotion = () => {
             </Select>
           </div>
           <Button onClick={promoteUser} disabled={loading} className="w-full">
-            {loading ? 'Promoting...' : 'Promote User'}
+            {loading ? 'Processing...' : 'Promote User'}
           </Button>
           <div className="text-xs text-gray-500">
-            <p>Note: The user must already exist in Supabase Auth or you can create them there first.</p>
+            <p>Note: If the user doesn't exist in Supabase Auth, create them there first, then use this tool to assign roles.</p>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    );
   );
 };
 

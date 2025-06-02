@@ -78,15 +78,20 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fetchUserProfile = async (user: User) => {
     try {
-      // First try to get the user by auth_user_id
+      console.log('Fetching profile for user:', user.email);
+      
+      // Try to get the user by auth_user_id first
       let { data: appUser, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('auth_user_id', user.id)
         .maybeSingle();
 
+      console.log('Found user by auth_user_id:', appUser);
+
       // If not found by auth_user_id, try by email
       if (!appUser && !error) {
+        console.log('User not found by auth_user_id, trying by email...');
         const { data: userByEmail, error: emailError } = await supabase
           .from('app_users')
           .select('*')
@@ -95,22 +100,27 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         
         appUser = userByEmail;
         error = emailError;
+        console.log('Found user by email:', appUser);
 
         // If found by email but missing auth_user_id, update it
         if (appUser && !appUser.auth_user_id) {
-          await supabase
+          console.log('Updating auth_user_id for existing user...');
+          const { error: updateError } = await supabase
             .from('app_users')
             .update({ auth_user_id: user.id })
             .eq('id', appUser.id);
           
-          appUser.auth_user_id = user.id;
+          if (updateError) {
+            console.error('Error updating auth_user_id:', updateError);
+          } else {
+            appUser.auth_user_id = user.id;
+          }
         }
       }
 
-      // If no app_users record exists, create one with default viewer role
-      // This handles manually created users in Supabase
+      // If no app_users record exists, create one
       if (!appUser && !error) {
-        console.log('Creating new app_users record for manually created user');
+        console.log('Creating new app_users record...');
         
         // Check if this is the super admin email
         const isSuperAdmin = user.email === 'asbtravelssjp@gmail.com';
@@ -139,6 +149,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         appUser = newAppUser;
+        console.log('Created new user:', appUser);
         
         if (isSuperAdmin) {
           toast({
@@ -160,6 +171,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (!appUser) {
+        console.log('No app user found');
         toast({
           title: "Account Setup Required",
           description: "Your account needs to be set up. Please contact an administrator.",
@@ -170,6 +182,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (appUser.status !== 'active') {
+        console.log('User status is not active:', appUser.status);
         toast({
           title: "Account Pending",
           description: "Your account is pending approval from an administrator.",
@@ -179,6 +192,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
 
+      console.log('Setting authenticated user:', appUser);
       setAdminUser({
         id: appUser.id,
         name: appUser.name,
@@ -205,12 +219,15 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
+      console.log('Attempting login for:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Login error:', error);
         toast({
           title: "Login Failed",
           description: error.message,
@@ -219,6 +236,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return false;
       }
 
+      console.log('Login successful:', data);
       // The auth state change listener will handle setting the user profile
       return true;
     } catch (error) {

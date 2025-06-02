@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,18 +61,24 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('Fetching users...');
       const { data, error } = await supabase
         .from('app_users')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching users:', error);
+        throw error;
+      }
+      
+      console.log('Users fetched successfully:', data);
       setUsers(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error fetching users:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch users",
+        description: error.message || "Failed to fetch users",
         variant: "destructive",
       });
     }
@@ -89,28 +96,45 @@ const UserManagement = () => {
 
     setLoading(true);
     try {
+      console.log('Creating new user...');
+      
       // Create auth user first
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: newUser.email,
         password: newUser.password,
         email_confirm: true,
+        user_metadata: {
+          name: newUser.name
+        }
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        console.error('Auth error:', authError);
+        throw authError;
+      }
 
-      // Create app user record
-      const { error: userError } = await supabase
-        .from('app_users')
-        .insert({
-          auth_user_id: authData.user.id,
-          name: newUser.name,
-          email: newUser.email,
-          role: newUser.role,
-          status: 'active',
-          created_by: adminUser?.id,
-        });
+      console.log('Auth user created:', authData);
 
-      if (userError) throw userError;
+      // The trigger will automatically create the app_users record,
+      // but we need to update the role if it's not viewer
+      if (newUser.role !== 'viewer') {
+        setTimeout(async () => {
+          const { error: updateError } = await supabase
+            .from('app_users')
+            .update({ 
+              role: newUser.role,
+              created_by: adminUser?.id 
+            })
+            .eq('auth_user_id', authData.user.id);
+
+          if (updateError) {
+            console.error('Error updating user role:', updateError);
+          } else {
+            console.log('User role updated successfully');
+            fetchUsers(); // Refresh the list
+          }
+        }, 2000); // Wait for trigger to execute
+      }
 
       toast({
         title: "Success",
@@ -119,7 +143,10 @@ const UserManagement = () => {
 
       setNewUser({ name: '', email: '', password: '', role: 'viewer' });
       setIsCreateDialogOpen(false);
-      fetchUsers();
+      
+      // Refresh users list after a short delay
+      setTimeout(fetchUsers, 2000);
+      
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -134,12 +161,17 @@ const UserManagement = () => {
 
   const updateUserStatus = async (userId: string, status: 'active' | 'suspended') => {
     try {
+      console.log('Updating user status:', userId, status);
+      
       const { error } = await supabase
         .from('app_users')
         .update({ status })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating user status:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -147,11 +179,11 @@ const UserManagement = () => {
       });
 
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating user status:', error);
       toast({
         title: "Error",
-        description: "Failed to update user status",
+        description: error.message || "Failed to update user status",
         variant: "destructive",
       });
     }
@@ -161,12 +193,17 @@ const UserManagement = () => {
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
+      console.log('Deleting user:', userId);
+      
       const { error } = await supabase
         .from('app_users')
         .delete()
         .eq('id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting user:', error);
+        throw error;
+      }
 
       toast({
         title: "Success",
@@ -174,11 +211,11 @@ const UserManagement = () => {
       });
 
       fetchUsers();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user",
+        description: error.message || "Failed to delete user",
         variant: "destructive",
       });
     }
@@ -284,6 +321,7 @@ const UserManagement = () => {
                     <SelectItem value="viewer">Viewer</SelectItem>
                     <SelectItem value="editor">Editor</SelectItem>
                     <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
