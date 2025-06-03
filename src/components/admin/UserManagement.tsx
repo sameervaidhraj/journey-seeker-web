@@ -30,6 +30,7 @@ import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
 import QuickUserPromotion from './QuickUserPromotion';
 import UserDebugInfo from './UserDebugInfo';
+import QuickAdminCreator from './QuickAdminCreator';
 
 interface AppUser {
   id: string;
@@ -262,6 +263,8 @@ const UserManagement = () => {
       </div>
 
       <UserDebugInfo />
+
+      <QuickAdminCreator />
 
       <QuickUserPromotion />
 

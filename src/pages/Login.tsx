@@ -67,11 +67,25 @@ const Login = () => {
         });
 
         if (error) {
-          toast({
-            title: "Login Failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          if (error.message.includes('Email not confirmed')) {
+            toast({
+              title: "Email Not Verified",
+              description: "Please check your email and click the verification link before logging in.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes('Invalid login credentials')) {
+            toast({
+              title: "Invalid Credentials",
+              description: "Please check your email and password and try again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Login Failed",
+              description: error.message,
+              variant: "destructive",
+            });
+          }
           return;
         }
 
@@ -81,7 +95,7 @@ const Login = () => {
         });
         navigate('/user-dashboard');
       } else {
-        // Register
+        // Register - disable email confirmation for faster testing
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -90,7 +104,8 @@ const Login = () => {
               name,
               phone,
               city,
-            }
+            },
+            emailRedirectTo: `${window.location.origin}/user-dashboard`
           }
         });
 
@@ -122,7 +137,7 @@ const Login = () => {
 
         toast({
           title: "Success",
-          description: "Account created successfully! Please check your email for verification.",
+          description: "Account created successfully! You can now sign in.",
         });
         
         setIsLogin(true);

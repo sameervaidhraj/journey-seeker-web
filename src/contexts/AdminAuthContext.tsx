@@ -87,14 +87,17 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         .eq('email', user.email)
         .maybeSingle();
 
-      console.log('Found user:', appUser);
+      console.log('Found user:', appUser, 'Error:', error);
 
-      // If user doesn't exist in app_users, create them
+      // If user doesn't exist in app_users, create them automatically
       if (!appUser && !error) {
         console.log('User not found in app_users, creating...');
         
-        // Determine role based on email
-        const role = user.email === 'sameervaidhraj@gmail.com' ? 'super_admin' : 'admin';
+        // Determine role based on email - only sameervaidhraj@gmail.com is super_admin
+        let role = 'admin'; // Default role for users created in Supabase
+        if (user.email === 'sameervaidhraj@gmail.com') {
+          role = 'super_admin';
+        }
         
         const { data: newAppUser, error: insertError } = await supabase
           .from('app_users')
@@ -212,11 +215,27 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       if (error) {
         console.error('Login error:', error);
-        toast({
-          title: "Login Failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        
+        // Handle specific error cases
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email Not Verified",
+            description: "Please check your email and click the verification link before logging in.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Invalid Credentials",
+            description: "Please check your email and password and try again.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login Failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
         return false;
       }
 

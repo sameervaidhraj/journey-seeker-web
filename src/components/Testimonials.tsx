@@ -15,6 +15,7 @@ interface Review {
 const Testimonials = () => {
   const [testimonials, setTestimonials] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTestimonials();
@@ -22,6 +23,9 @@ const Testimonials = () => {
 
   const fetchTestimonials = async () => {
     try {
+      setLoading(true);
+      setError(null);
+      
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
@@ -31,13 +35,18 @@ const Testimonials = () => {
 
       if (error) {
         console.error('Error fetching testimonials:', error);
-        // Fall back to default testimonials if database fetch fails
+        setError('Failed to load testimonials');
+        // Fall back to default testimonials
         setTestimonials(defaultTestimonials);
+      } else if (data && data.length > 0) {
+        setTestimonials(data);
       } else {
-        setTestimonials(data || defaultTestimonials);
+        // Use default testimonials if no data
+        setTestimonials(defaultTestimonials);
       }
     } catch (error) {
       console.error('Error:', error);
+      setError('Failed to load testimonials');
       setTestimonials(defaultTestimonials);
     } finally {
       setLoading(false);
@@ -81,7 +90,10 @@ const Testimonials = () => {
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h2 className="section-title mx-auto">What Our Travelers Say</h2>
-            <p className="text-gray-600 mt-4">Loading testimonials...</p>
+            <div className="flex justify-center items-center mt-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-travel-blue"></div>
+              <p className="text-gray-600 ml-3">Loading testimonials...</p>
+            </div>
           </div>
         </div>
       </section>
@@ -96,6 +108,11 @@ const Testimonials = () => {
           <p className="text-gray-600 mt-4 max-w-2xl mx-auto">
             Hear from our satisfied customers about their travel experiences with us
           </p>
+          {error && (
+            <p className="text-orange-600 text-sm mt-2">
+              Showing sample testimonials
+            </p>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
@@ -106,6 +123,9 @@ const Testimonials = () => {
                   src={testimonial.user_image || "https://randomuser.me/api/portraits/lego/1.jpg"} 
                   alt={testimonial.user_name} 
                   className="w-14 h-14 rounded-full object-cover mr-4"
+                  onError={(e) => {
+                    e.currentTarget.src = "https://randomuser.me/api/portraits/lego/1.jpg";
+                  }}
                 />
                 <div>
                   <h4 className="font-semibold">{testimonial.user_name}</h4>
