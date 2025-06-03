@@ -20,7 +20,7 @@ export type AdminUser = {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'editor' | 'viewer';
+  role: 'super_admin' | 'admin' | 'viewer';
   status: 'active' | 'pending' | 'suspended';
 };
 
@@ -80,50 +80,21 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     try {
       console.log('Fetching profile for user:', user.email);
       
-      // Try to get the user by auth_user_id first
+      // First check if user exists in app_users
       let { data: appUser, error } = await supabase
         .from('app_users')
         .select('*')
-        .eq('auth_user_id', user.id)
+        .eq('email', user.email)
         .maybeSingle();
 
-      console.log('Found user by auth_user_id:', appUser);
+      console.log('Found user:', appUser);
 
-      // If not found by auth_user_id, try by email
+      // If user doesn't exist in app_users, create them
       if (!appUser && !error) {
-        console.log('User not found by auth_user_id, trying by email...');
-        const { data: userByEmail, error: emailError } = await supabase
-          .from('app_users')
-          .select('*')
-          .eq('email', user.email)
-          .maybeSingle();
+        console.log('User not found in app_users, creating...');
         
-        appUser = userByEmail;
-        error = emailError;
-        console.log('Found user by email:', appUser);
-
-        // If found by email but missing auth_user_id, update it
-        if (appUser && !appUser.auth_user_id) {
-          console.log('Updating auth_user_id for existing user...');
-          const { error: updateError } = await supabase
-            .from('app_users')
-            .update({ auth_user_id: user.id })
-            .eq('id', appUser.id);
-          
-          if (updateError) {
-            console.error('Error updating auth_user_id:', updateError);
-          } else {
-            appUser.auth_user_id = user.id;
-          }
-        }
-      }
-
-      // If no app_users record exists, create one
-      if (!appUser && !error) {
-        console.log('Creating new app_users record...');
-        
-        // Check if this is the super admin email
-        const isSuperAdmin = user.email === 'sameervaidhraj@gmail.com';
+        // Determine role based on email
+        const role = user.email === 'sameervaidhraj@gmail.com' ? 'super_admin' : 'admin';
         
         const { data: newAppUser, error: insertError } = await supabase
           .from('app_users')
@@ -131,7 +102,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             auth_user_id: user.id,
             name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
             email: user.email,
-            role: isSuperAdmin ? 'super_admin' : 'viewer',
+            role: role,
             status: 'active'
           })
           .select()
@@ -139,46 +110,17 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
         if (insertError) {
           console.error('Error creating app_users record:', insertError);
-          
-          // If it's a unique constraint error, try to fetch the existing record
-          if (insertError.code === '23505') {
-            const { data: existingUser } = await supabase
-              .from('app_users')
-              .select('*')
-              .eq('email', user.email)
-              .single();
-            
-            if (existingUser) {
-              appUser = existingUser;
-            } else {
-              toast({
-                title: "Setup Error",
-                description: "Failed to set up user profile. Please contact support.",
-                variant: "destructive",
-              });
-              await supabase.auth.signOut();
-              return;
-            }
-          } else {
-            toast({
-              title: "Setup Error",
-              description: "Failed to set up user profile. Please contact support.",
-              variant: "destructive",
-            });
-            await supabase.auth.signOut();
-            return;
-          }
-        } else {
-          appUser = newAppUser;
-          console.log('Created new user:', appUser);
-          
-          if (isSuperAdmin) {
-            toast({
-              title: "Welcome Super Admin",
-              description: "Your super admin account has been set up successfully!",
-            });
-          }
+          toast({
+            title: "Setup Error",
+            description: "Failed to set up user profile. Please contact support.",
+            variant: "destructive",
+          });
+          await supabase.auth.signOut();
+          return;
         }
+
+        appUser = newAppUser;
+        console.log('Created new user:', appUser);
       }
 
       if (error) {
@@ -203,6 +145,21 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return;
       }
 
+      // Update auth_user_id if missing
+      if (!appUser.auth_user_id) {
+        console.log('Updating auth_user_id for existing user...');
+        const { error: updateError } = await supabase
+          .from('app_users')
+          .update({ auth_user_id: user.id })
+          .eq('id', appUser.id);
+        
+        if (updateError) {
+          console.error('Error updating auth_user_id:', updateError);
+        } else {
+          appUser.auth_user_id = user.id;
+        }
+      }
+
       if (appUser.status !== 'active') {
         console.log('User status is not active:', appUser.status);
         toast({
@@ -219,8 +176,8 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: appUser.id,
         name: appUser.name,
         email: appUser.email,
-        role: appUser.role,
-        status: appUser.status,
+        role: appUser.role as 'super_admin' | 'admin' | 'viewer',
+        status: appUser.status as 'active' | 'pending' | 'suspended',
       });
       setIsAuthenticated(true);
       
