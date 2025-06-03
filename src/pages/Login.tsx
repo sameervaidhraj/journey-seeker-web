@@ -61,21 +61,39 @@ const Login = () => {
     try {
       if (isLogin) {
         // Login
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
+        console.log('Attempting login for:', email);
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
           password,
         });
 
         if (error) {
           console.error('Login error:', error);
-          toast({
-            title: "Login Failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          
+          // Handle specific error cases
+          if (error.message.includes('Email not confirmed')) {
+            toast({
+              title: "Email Not Confirmed",
+              description: "Please check your email and click the confirmation link, or contact support if you need help.",
+              variant: "destructive",
+            });
+          } else if (error.message.includes('Invalid login credentials')) {
+            toast({
+              title: "Invalid Credentials",
+              description: "Please check your email and password and try again.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Login Failed",
+              description: error.message || "An error occurred during login",
+              variant: "destructive",
+            });
+          }
           return;
         }
 
+        console.log('Login successful:', data);
         toast({
           title: "Success",
           description: "Logged in successfully!",
@@ -83,13 +101,14 @@ const Login = () => {
         navigate('/user-dashboard');
       } else {
         // Register new user as viewer
+        console.log('Attempting registration for:', email);
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: email.trim().toLowerCase(),
           password,
           options: {
             data: {
-              name,
-              phone,
+              name: name.trim(),
+              phone: phone.trim(),
               city,
             },
             emailRedirectTo: `${window.location.origin}/user-dashboard`
@@ -98,34 +117,50 @@ const Login = () => {
 
         if (error) {
           console.error('Registration error:', error);
-          toast({
-            title: "Registration Failed",
-            description: error.message,
-            variant: "destructive",
-          });
+          
+          if (error.message.includes('User already registered')) {
+            toast({
+              title: "Account Exists",
+              description: "An account with this email already exists. Please try logging in instead.",
+              variant: "destructive",
+            });
+            setIsLogin(true);
+          } else {
+            toast({
+              title: "Registration Failed",
+              description: error.message || "An error occurred during registration",
+              variant: "destructive",
+            });
+          }
           return;
         }
 
         // Create user profile in app_users as viewer
         if (data.user) {
+          console.log('Creating user profile for:', data.user.email);
           const { error: profileError } = await supabase
             .from('app_users')
             .insert({
               auth_user_id: data.user.id,
-              email: email,
-              name: name,
+              email: email.trim().toLowerCase(),
+              name: name.trim(),
               role: 'viewer',
               status: 'active'
             });
 
           if (profileError) {
             console.error('Error creating user profile:', profileError);
+            toast({
+              title: "Profile Creation Error",
+              description: "Account created but profile setup failed. Please contact support.",
+              variant: "destructive",
+            });
           }
         }
 
         toast({
           title: "Success",
-          description: "Account created successfully! You can now sign in.",
+          description: "Account created successfully! Please check your email for confirmation, then you can sign in.",
         });
         
         setIsLogin(true);
@@ -140,7 +175,7 @@ const Login = () => {
       console.error('Auth error:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -169,13 +204,14 @@ const Login = () => {
             <CardContent className="space-y-4">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input 
                     id="email" 
                     type="email" 
                     placeholder="your.email@example.com" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -183,30 +219,32 @@ const Login = () => {
                 {!isLogin && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name">Full Name *</Label>
                       <Input 
                         id="name" 
                         placeholder="John Doe" 
                         value={name}
                         onChange={(e) => setName(e.target.value)}
+                        disabled={loading}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
+                      <Label htmlFor="phone">Phone Number *</Label>
                       <Input 
                         id="phone" 
                         placeholder="10-digit mobile number" 
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
+                        disabled={loading}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="city">City</Label>
-                      <Select onValueChange={setCity} required>
+                      <Label htmlFor="city">City *</Label>
+                      <Select onValueChange={setCity} required disabled={loading}>
                         <SelectTrigger>
                           <SelectValue placeholder="Select your city" />
                         </SelectTrigger>
@@ -226,7 +264,7 @@ const Login = () => {
                 
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <Label htmlFor="password">Password</Label>
+                    <Label htmlFor="password">Password *</Label>
                     {isLogin && (
                       <a href="/forgot-password" className="text-sm text-travel-blue hover:underline">
                         Forgot password?
@@ -236,8 +274,10 @@ const Login = () => {
                   <Input 
                     id="password" 
                     type="password" 
+                    placeholder={isLogin ? "Enter your password" : "Choose a password (min 6 chars)"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    disabled={loading}
                     required
                   />
                 </div>
@@ -247,7 +287,12 @@ const Login = () => {
                   className="w-full bg-travel-blue hover:bg-travel-blue-dark"
                   disabled={loading}
                 >
-                  {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
+                  {loading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      {isLogin ? 'Signing In...' : 'Creating Account...'}
+                    </div>
+                  ) : (isLogin ? 'Sign In' : 'Create Account')}
                 </Button>
               </form>
             </CardContent>
@@ -265,6 +310,7 @@ const Login = () => {
                     setCity('');
                   }}
                   className="text-travel-blue hover:underline"
+                  disabled={loading}
                 >
                   {isLogin ? 'Create an account' : 'Sign in'}
                 </button>

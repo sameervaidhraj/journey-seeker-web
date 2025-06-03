@@ -23,6 +23,7 @@ const AdminLogin = () => {
   const [password, setPassword] = useState('');
   const [isFormComplete, setIsFormComplete] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { login, isAuthenticated, loading } = useAdminAuth();
@@ -51,10 +52,26 @@ const AdminLogin = () => {
       return;
     }
 
-    const success = await login(email, password);
-    
-    if (success) {
-      navigate('/admin/dashboard');
+    setIsLoading(true);
+    try {
+      const success = await login(email, password);
+      
+      if (success) {
+        toast({
+          title: "Success",
+          description: "Logged in successfully!",
+        });
+        navigate('/admin/dashboard');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login Failed",
+        description: "An unexpected error occurred",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -63,7 +80,10 @@ const AdminLogin = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
-          <div className="text-lg">Loading...</div>
+          <div className="text-lg flex items-center gap-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-travel-orange"></div>
+            Loading...
+          </div>
         </div>
         <Footer />
       </div>
@@ -97,6 +117,7 @@ const AdminLogin = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <div className="space-y-2">
@@ -108,6 +129,7 @@ const AdminLogin = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      disabled={isLoading}
                     />
                   </div>
                   <Button 
@@ -116,9 +138,14 @@ const AdminLogin = () => {
                       ? 'bg-travel-orange hover:bg-travel-orange/90' 
                       : 'bg-gray-400 cursor-not-allowed'
                     }`}
-                    disabled={!isFormComplete}
+                    disabled={!isFormComplete || isLoading}
                   >
-                    {isFormComplete ? 'Admin Sign In' : 'Please Fill All Fields'}
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Signing In...
+                      </div>
+                    ) : isFormComplete ? 'Admin Sign In' : 'Please Fill All Fields'}
                   </Button>
                 </form>
               </CardContent>
@@ -127,6 +154,7 @@ const AdminLogin = () => {
                   type="button"
                   onClick={() => setShowForgotPassword(true)}
                   className="text-sm text-travel-orange hover:underline"
+                  disabled={isLoading}
                 >
                   Forgot your password?
                 </button>

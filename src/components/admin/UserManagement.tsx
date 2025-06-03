@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
-import { Plus, Edit, Trash2, Check, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Check, X, RefreshCw } from 'lucide-react';
 import QuickUserPromotion from './QuickUserPromotion';
 import UserDebugInfo from './UserDebugInfo';
 import QuickAdminCreator from './QuickAdminCreator';
@@ -46,6 +47,7 @@ const UserManagement = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const { toast } = useToast();
   const { adminUser } = useAdminAuth();
 
@@ -58,11 +60,21 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
+    
+    // Listen for user creation events
+    const handleUserCreated = () => {
+      fetchUsers();
+    };
+    
+    window.addEventListener('userCreated', handleUserCreated);
+    return () => window.removeEventListener('userCreated', handleUserCreated);
   }, []);
 
   const fetchUsers = async () => {
     try {
       console.log('Fetching users...');
+      setRefreshing(true);
+      
       const { data, error } = await supabase
         .from('app_users')
         .select('*')
@@ -82,6 +94,8 @@ const UserManagement = () => {
         description: error.message || "Failed to fetch users",
         variant: "destructive",
       });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -95,17 +109,26 @@ const UserManagement = () => {
       return;
     }
 
+    if (newUser.password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
       console.log('Creating new user...');
       
       // Create auth user first
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-        email: newUser.email,
+        email: newUser.email.trim().toLowerCase(),
         password: newUser.password,
         email_confirm: true,
         user_metadata: {
-          name: newUser.name
+          name: newUser.name.trim()
         }
       });
 
@@ -116,25 +139,21 @@ const UserManagement = () => {
 
       console.log('Auth user created:', authData);
 
-      // The trigger will automatically create the app_users record,
-      // but we need to update the role if it's not viewer
-      if (newUser.role !== 'viewer') {
-        setTimeout(async () => {
-          const { error: updateError } = await supabase
-            .from('app_users')
-            .update({ 
-              role: newUser.role,
-              created_by: adminUser?.id 
-            })
-            .eq('auth_user_id', authData.user.id);
+      // Create app_users record
+      const { error: insertError } = await supabase
+        .from('app_users')
+        .insert({
+          auth_user_id: authData.user.id,
+          email: newUser.email.trim().toLowerCase(),
+          name: newUser.name.trim(),
+          role: newUser.role,
+          status: 'active',
+          created_by: adminUser?.id
+        });
 
-          if (updateError) {
-            console.error('Error updating user role:', updateError);
-          } else {
-            console.log('User role updated successfully');
-            fetchUsers(); // Refresh the list
-          }
-        }, 2000); // Wait for trigger to execute
+      if (insertError) {
+        console.error('Error creating app_users record:', insertError);
+        throw insertError;
       }
 
       toast({
@@ -144,9 +163,7 @@ const UserManagement = () => {
 
       setNewUser({ name: '', email: '', password: '', role: 'viewer' });
       setIsCreateDialogOpen(false);
-      
-      // Refresh users list after a short delay
-      setTimeout(fetchUsers, 2000);
+      fetchUsers();
       
     } catch (error: any) {
       console.error('Error creating user:', error);
@@ -269,8 +286,16 @@ const UserManagement = () => {
       <QuickUserPromotion />
 
       <div className="flex justify-between items-center">
-        <div>
-          <h3 className="text-lg font-semibold">All Users</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-semibold">All Users ({users.length})</h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchUsers}
+            disabled={refreshing}
+          >
+            <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
+          </Button>
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
@@ -288,37 +313,44 @@ const UserManagement = () => {
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">Full Name *</Label>
                 <Input
                   id="name"
                   value={newUser.name}
                   onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                   placeholder="Enter full name"
+                  disabled={loading}
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <Input
                   id="email"
                   type="email"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                   placeholder="Enter email address"
+                  disabled={loading}
                 />
               </div>
               <div>
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={newUser.password}
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  placeholder="Enter password"
+                  placeholder="Enter password (min 6 chars)"
+                  disabled={loading}
                 />
               </div>
               <div>
-                <Label htmlFor="role">Role</Label>
-                <Select value={newUser.role} onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}>
+                <Label htmlFor="role">Role *</Label>
+                <Select 
+                  value={newUser.role} 
+                  onValueChange={(value: any) => setNewUser({ ...newUser, role: value })}
+                  disabled={loading}
+                >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -331,7 +363,12 @@ const UserManagement = () => {
                 </Select>
               </div>
               <Button onClick={createUser} disabled={loading} className="w-full">
-                {loading ? 'Creating...' : 'Create User'}
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Creating...
+                  </div>
+                ) : 'Create User'}
               </Button>
             </div>
           </DialogContent>
@@ -343,74 +380,80 @@ const UserManagement = () => {
           <CardTitle>Users ({users.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Name</th>
-                  <th className="px-4 py-3 text-left font-semibold">Email</th>
-                  <th className="px-4 py-3 text-left font-semibold">Role</th>
-                  <th className="px-4 py-3 text-left font-semibold">Status</th>
-                  <th className="px-4 py-3 text-left font-semibold">Created</th>
-                  <th className="px-4 py-3 text-left font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.map((user) => (
-                  <tr key={user.id} className="border-b">
-                    <td className="px-4 py-3 font-medium">{user.name}</td>
-                    <td className="px-4 py-3">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                        {user.role.replace('_', ' ')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
-                        {user.status}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      {new Date(user.created_at).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex gap-2">
-                        {user.status === 'suspended' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateUserStatus(user.id, 'active')}
-                            className="text-green-600 hover:text-green-700"
-                          >
-                            <Check size={14} />
-                          </Button>
-                        ) : user.status === 'active' && user.role !== 'super_admin' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateUserStatus(user.id, 'suspended')}
-                            className="text-orange-600 hover:text-orange-700"
-                          >
-                            <X size={14} />
-                          </Button>
-                        ) : null}
-                        {user.role !== 'super_admin' && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => deleteUser(user.id)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 size={14} />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
+          {users.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No users found. Create your first user above.
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left font-semibold">Name</th>
+                    <th className="px-4 py-3 text-left font-semibold">Email</th>
+                    <th className="px-4 py-3 text-left font-semibold">Role</th>
+                    <th className="px-4 py-3 text-left font-semibold">Status</th>
+                    <th className="px-4 py-3 text-left font-semibold">Created</th>
+                    <th className="px-4 py-3 text-left font-semibold">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {users.map((user) => (
+                    <tr key={user.id} className="border-b">
+                      <td className="px-4 py-3 font-medium">{user.name}</td>
+                      <td className="px-4 py-3">{user.email}</td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                          {user.role.replace('_', ' ')}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
+                          {user.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-2">
+                          {user.status === 'suspended' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateUserStatus(user.id, 'active')}
+                              className="text-green-600 hover:text-green-700"
+                            >
+                              <Check size={14} />
+                            </Button>
+                          ) : user.status === 'active' && user.role !== 'super_admin' ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => updateUserStatus(user.id, 'suspended')}
+                              className="text-orange-600 hover:text-orange-700"
+                            >
+                              <X size={14} />
+                            </Button>
+                          ) : null}
+                          {user.role !== 'super_admin' && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => deleteUser(user.id)}
+                              className="text-red-600 hover:text-red-700"
+                            >
+                              <Trash2 size={14} />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
