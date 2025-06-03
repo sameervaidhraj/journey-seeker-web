@@ -67,25 +67,12 @@ const Login = () => {
         });
 
         if (error) {
-          if (error.message.includes('Email not confirmed')) {
-            toast({
-              title: "Email Not Verified",
-              description: "Please check your email and click the verification link before logging in.",
-              variant: "destructive",
-            });
-          } else if (error.message.includes('Invalid login credentials')) {
-            toast({
-              title: "Invalid Credentials",
-              description: "Please check your email and password and try again.",
-              variant: "destructive",
-            });
-          } else {
-            toast({
-              title: "Login Failed",
-              description: error.message,
-              variant: "destructive",
-            });
-          }
+          console.error('Login error:', error);
+          toast({
+            title: "Login Failed",
+            description: error.message,
+            variant: "destructive",
+          });
           return;
         }
 
@@ -95,7 +82,7 @@ const Login = () => {
         });
         navigate('/user-dashboard');
       } else {
-        // Register - disable email confirmation for faster testing
+        // Register new user as viewer
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
@@ -110,6 +97,7 @@ const Login = () => {
         });
 
         if (error) {
+          console.error('Registration error:', error);
           toast({
             title: "Registration Failed",
             description: error.message,
@@ -118,7 +106,7 @@ const Login = () => {
           return;
         }
 
-        // Create user profile in app_users as viewer (they can't access admin)
+        // Create user profile in app_users as viewer
         if (data.user) {
           const { error: profileError } = await supabase
             .from('app_users')
@@ -141,6 +129,12 @@ const Login = () => {
         });
         
         setIsLogin(true);
+        // Clear form
+        setEmail('');
+        setPassword('');
+        setName('');
+        setPhone('');
+        setCity('');
       }
     } catch (error) {
       console.error('Auth error:', error);

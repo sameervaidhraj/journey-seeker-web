@@ -26,6 +26,7 @@ const Testimonials = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching testimonials from database...');
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
@@ -39,13 +40,15 @@ const Testimonials = () => {
         // Fall back to default testimonials
         setTestimonials(defaultTestimonials);
       } else if (data && data.length > 0) {
+        console.log('Testimonials fetched successfully:', data);
         setTestimonials(data);
       } else {
+        console.log('No testimonials found, using defaults');
         // Use default testimonials if no data
         setTestimonials(defaultTestimonials);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error fetching testimonials:', error);
       setError('Failed to load testimonials');
       setTestimonials(defaultTestimonials);
     } finally {

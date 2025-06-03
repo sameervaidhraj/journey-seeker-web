@@ -128,12 +128,13 @@ const ReviewsManagement = () => {
       }
 
       const reviewData = {
-        ...formData,
-        user_image: imageUrl,
         user_name: formData.user_name.trim(),
-        review_text: formData.review_text.trim(),
         user_location: formData.user_location.trim() || null,
+        user_image: imageUrl || null,
+        rating: formData.rating,
+        review_text: formData.review_text.trim(),
         package_name: formData.package_name.trim() || null,
+        status: formData.status
       };
 
       if (editingReview) {
@@ -163,11 +164,11 @@ const ReviewsManagement = () => {
 
       resetForm();
       fetchReviews();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving review:', error);
       toast({
         title: "Error",
-        description: "Failed to save review",
+        description: error.message || "Failed to save review",
         variant: "destructive",
       });
     } finally {
@@ -207,11 +208,11 @@ const ReviewsManagement = () => {
       });
       
       fetchReviews();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting review:', error);
       toast({
         title: "Error",
-        description: "Failed to delete review",
+        description: error.message || "Failed to delete review",
         variant: "destructive",
       });
     }
@@ -339,7 +340,7 @@ const ReviewsManagement = () => {
               
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="user_image_file">Profile Image (Upload)</Label>
+                  <Label htmlFor="user_image_file">Profile Image (Upload from Device)</Label>
                   <div className="flex items-center space-x-2">
                     <Input
                       id="user_image_file"
@@ -419,6 +420,9 @@ const ReviewsManagement = () => {
                             src={review.user_image} 
                             alt={review.user_name}
                             className="w-8 h-8 rounded-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "https://randomuser.me/api/portraits/lego/1.jpg";
+                            }}
                           />
                         )}
                         <div>
