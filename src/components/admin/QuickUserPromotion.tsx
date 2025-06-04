@@ -25,7 +25,7 @@ const QuickUserPromotion = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'admin' | 'viewer'>('admin');
+  const [role, setRole] = useState<'viewer'>('viewer');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { adminUser } = useAdminAuth();
@@ -86,7 +86,7 @@ const QuickUserPromotion = () => {
       setEmail('');
       setPassword('');
       setName('');
-      setRole('admin');
+      setRole('viewer');
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -99,7 +99,7 @@ const QuickUserPromotion = () => {
     }
   };
 
-  // Only super_admin can use this feature
+  // Only show this component to super_admin users
   if (adminUser?.role !== 'super_admin') {
     return null;
   }
@@ -107,9 +107,9 @@ const QuickUserPromotion = () => {
   return (
     <Card className="mb-6">
       <CardHeader>
-        <CardTitle>Create Admin User</CardTitle>
+        <CardTitle>Create User</CardTitle>
         <CardDescription>
-          Create new admin users who can access the admin panel
+          Create new users who can access the website
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -151,7 +151,6 @@ const QuickUserPromotion = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
@@ -160,7 +159,7 @@ const QuickUserPromotion = () => {
             {loading ? 'Creating...' : 'Create User'}
           </Button>
           <div className="text-xs text-gray-500">
-            <p>Note: Admin users can access the admin panel. Viewer users cannot access admin features.</p>
+            <p>Note: Viewer users can access the main website only.</p>
           </div>
         </div>
       </CardContent>

@@ -35,7 +35,7 @@ interface AppUser {
   id: string;
   name: string;
   email: string;
-  role: 'admin' | 'viewer';
+  role: 'admin' | 'viewer' | 'super_admin';
   status: 'active' | 'pending' | 'suspended';
   created_at: string;
   created_by: string | null;
@@ -121,11 +121,11 @@ const UserManagement = () => {
       return;
     }
 
-    // Check if trying to create admin for non-admin email
-    if (newUser.role === 'admin' && !ADMIN_EMAILS.includes(newUser.email.toLowerCase())) {
+    // Only allow viewer role for regular users
+    if (newUser.role !== 'viewer') {
       toast({
         title: "Error",
-        description: "Only specific emails can be assigned admin role. Use viewer role for regular users.",
+        description: "Regular users can only be assigned viewer role.",
         variant: "destructive",
       });
       return;
@@ -264,6 +264,7 @@ const UserManagement = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
+      case 'super_admin': return 'bg-purple-100 text-purple-800';
       case 'admin': return 'bg-orange-100 text-orange-800';
       case 'viewer': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -278,6 +279,11 @@ const UserManagement = () => {
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Only super_admin can manage users
+  if (adminUser?.role !== 'super_admin') {
+    return null;
+  }
 
   return (
     <div className="space-y-6">
@@ -311,7 +317,7 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>
-                Add a new user to the system. Only specific emails can be assigned admin role.
+                Add a new user to the system. Regular users are assigned viewer role.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -359,7 +365,6 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="viewer">Viewer</SelectItem>
-                    <SelectItem value="admin">Admin (Limited to specific emails)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -372,7 +377,7 @@ const UserManagement = () => {
                 ) : 'Create User'}
               </Button>
               <div className="text-xs text-gray-500 space-y-1">
-                <p>• Admin role is limited to: {ADMIN_EMAILS.join(', ')}</p>
+                <p>• Admin access is limited to: {ADMIN_EMAILS.join(', ')}</p>
                 <p>• Viewer users can access the main website</p>
                 <p>• Passwords must be at least 6 characters long</p>
               </div>

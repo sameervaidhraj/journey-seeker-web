@@ -25,7 +25,7 @@ const QuickAdminCreator = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'admin' | 'viewer'>('admin');
+  const [role, setRole] = useState<'viewer'>('viewer');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const { adminUser } = useAdminAuth();
@@ -98,14 +98,14 @@ const QuickAdminCreator = () => {
 
       toast({
         title: "Success",
-        description: `${role === 'admin' ? 'Admin' : 'User'} ${email} has been created successfully`,
+        description: `User ${email} has been created successfully`,
       });
 
       // Clear form
       setEmail('');
       setPassword('');
       setName('');
-      setRole('admin');
+      setRole('viewer');
       
       // Trigger a refresh of the user list if parent component listens for this
       window.dispatchEvent(new CustomEvent('userCreated'));
@@ -122,7 +122,7 @@ const QuickAdminCreator = () => {
     }
   };
 
-  // Only super_admin can use this feature
+  // Only show this component to super_admin users
   if (adminUser?.role !== 'super_admin') {
     return null;
   }
@@ -132,7 +132,7 @@ const QuickAdminCreator = () => {
       <CardHeader>
         <CardTitle>Quick User Creator</CardTitle>
         <CardDescription>
-          Create new users with admin or viewer permissions
+          Create new users with viewer permissions
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -187,7 +187,6 @@ const QuickAdminCreator = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="viewer">Viewer</SelectItem>
               </SelectContent>
             </Select>
@@ -198,11 +197,11 @@ const QuickAdminCreator = () => {
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 Creating...
               </div>
-            ) : `Create ${role === 'admin' ? 'Admin' : 'User'}`}
+            ) : 'Create User'}
           </Button>
           <div className="text-xs text-gray-500 space-y-1">
-            <p>• Admin users can access the admin panel and manage content</p>
-            <p>• Viewer users can only view content on the main website</p>
+            <p>• Only admins can access the admin panel</p>
+            <p>• Viewer users can access the main website</p>
             <p>• Passwords must be at least 6 characters long</p>
           </div>
         </div>

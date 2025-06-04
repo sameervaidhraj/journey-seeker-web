@@ -15,12 +15,12 @@ type AdminAuthContextType = {
   loading: boolean;
 };
 
-// Admin user type
+// Admin user type - updated to support multiple admin roles
 export type AdminUser = {
   id: string;
   name: string;
   email: string;
-  role: 'admin';
+  role: 'admin' | 'super_admin';
   status: 'active';
 };
 
@@ -115,13 +115,16 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!appUser && !error) {
         console.log('Creating admin user in database...');
         
+        // Set role based on email - sameervaidhraj@gmail.com is super_admin
+        const role = user.email === 'sameervaidhraj@gmail.com' ? 'super_admin' : 'admin';
+        
         const { data: newAppUser, error: insertError } = await supabase
           .from('app_users')
           .insert({
             auth_user_id: user.id,
             name: user.email === 'sameervaidhraj@gmail.com' ? 'Sameer Vaidhraj' : 'ASB Travels Admin',
             email: user.email,
-            role: 'admin',
+            role: role,
             status: 'active'
           })
           .select()
@@ -182,7 +185,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         id: appUser.id,
         name: appUser.name,
         email: appUser.email,
-        role: 'admin',
+        role: appUser.role as 'admin' | 'super_admin',
         status: 'active',
       });
       setIsAuthenticated(true);
