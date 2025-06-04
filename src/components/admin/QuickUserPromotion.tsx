@@ -30,6 +30,16 @@ const QuickUserPromotion = () => {
   const { toast } = useToast();
   const { adminUser } = useAdminAuth();
 
+  // Generate a secure password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let password = '';
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setPassword(password);
+  };
+
   const createUser = async () => {
     if (!email.trim() || !password.trim() || !name.trim()) {
       toast({
@@ -40,11 +50,18 @@ const QuickUserPromotion = () => {
       return;
     }
 
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     try {
-      console.log('Creating new user:', email, 'with role:', role);
-      
-      // Create auth user first
+      // Optimize by using a single call with error handling
       const { data: authData, error: authError } = await supabase.auth.admin.createUser({
         email: email.trim().toLowerCase(),
         password: password,
@@ -55,13 +72,14 @@ const QuickUserPromotion = () => {
       });
 
       if (authError) {
-        console.error('Auth error:', authError);
         throw authError;
       }
 
-      console.log('Auth user created:', authData);
+      if (!authData.user) {
+        throw new Error("Failed to create user");
+      }
 
-      // Create app_users record
+      // Create app_users record with better error handling
       const { error: insertError } = await supabase
         .from('app_users')
         .insert({
@@ -74,7 +92,6 @@ const QuickUserPromotion = () => {
         });
 
       if (insertError) {
-        console.error('Error creating app_users record:', insertError);
         throw insertError;
       }
 
@@ -83,10 +100,14 @@ const QuickUserPromotion = () => {
         description: `User ${email} has been created with ${role} role`,
       });
 
+      // Clear form after successful creation
       setEmail('');
       setPassword('');
       setName('');
       setRole('viewer');
+      
+      // Trigger refresh if parent component listens for this
+      window.dispatchEvent(new CustomEvent('userCreated'));
     } catch (error: any) {
       console.error('Error creating user:', error);
       toast({
@@ -122,6 +143,7 @@ const QuickUserPromotion = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter full name"
+              disabled={loading}
             />
           </div>
           <div>
@@ -132,21 +154,33 @@ const QuickUserPromotion = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="user@example.com"
+              disabled={loading}
             />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
-            />
+            <div className="flex gap-2">
+              <Input
+                id="password"
+                type="text"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter password (min 6 chars)"
+                disabled={loading}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={generatePassword}
+                disabled={loading}
+              >
+                Generate
+              </Button>
+            </div>
           </div>
           <div>
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(value: any) => setRole(value)}>
+            <Select value={role} onValueChange={(value: any) => setRole(value)} disabled={loading}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -155,8 +189,17 @@ const QuickUserPromotion = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={createUser} disabled={loading} className="w-full">
-            {loading ? 'Creating...' : 'Create User'}
+          <Button 
+            onClick={createUser} 
+            disabled={loading || !email || !password || !name} 
+            className="w-full"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                Creating...
+              </div>
+            ) : 'Create User'}
           </Button>
           <div className="text-xs text-gray-500">
             <p>Note: Viewer users can access the main website only.</p>
