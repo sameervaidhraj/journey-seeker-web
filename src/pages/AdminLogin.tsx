@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import {
@@ -28,10 +28,14 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { login, isAuthenticated, loading } = useAdminAuth();
 
-  // Check if form is complete
-  useEffect(() => {
+  // Check if form is complete - optimized with useCallback
+  const checkFormComplete = useCallback(() => {
     setIsFormComplete(email.trim() !== '' && password.trim() !== '');
   }, [email, password]);
+
+  useEffect(() => {
+    checkFormComplete();
+  }, [checkFormComplete]);
 
   // If already authenticated, redirect to admin dashboard
   useEffect(() => {
@@ -40,7 +44,7 @@ const AdminLogin = () => {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!isFormComplete) {
@@ -54,7 +58,7 @@ const AdminLogin = () => {
 
     setIsLoading(true);
     try {
-      const success = await login(email, password);
+      const success = await login(email.trim(), password);
       
       if (success) {
         toast({
@@ -73,7 +77,7 @@ const AdminLogin = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [email, password, isFormComplete, login, navigate, toast]);
 
   if (loading) {
     return (
@@ -118,6 +122,7 @@ const AdminLogin = () => {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="email"
                     />
                   </div>
                   <div className="space-y-2">
@@ -130,6 +135,7 @@ const AdminLogin = () => {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       disabled={isLoading}
+                      autoComplete="current-password"
                     />
                   </div>
                   <Button 

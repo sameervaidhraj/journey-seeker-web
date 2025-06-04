@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -45,49 +44,48 @@ const defaultTestimonials = [
 ];
 
 const Testimonials = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchTestimonials();
-  }, []);
-
-  const fetchTestimonials = async () => {
+  const fetchTestimonials = useCallback(async () => {
     try {
-      console.log('Fetching testimonials from database...');
       setLoading(true);
+      setError(null);
       
-      const { data, error } = await supabase
+      const { data, error: fetchError } = await supabase
         .from('reviews')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(6);
 
-      if (error) {
-        console.error('Error fetching testimonials:', error);
-        throw error;
+      if (fetchError) {
+        console.error('Error fetching testimonials:', fetchError);
+        throw fetchError;
       }
-
-      console.log('Testimonials fetched:', data);
 
       if (data && data.length > 0) {
         setTestimonials(data);
       } else {
-        // Use default testimonials if no database testimonials found
-        console.log('No database testimonials found, using defaults');
+        // Keep default testimonials if no database testimonials found
         setTestimonials(defaultTestimonials);
       }
     } catch (error) {
       console.error('Error fetching testimonials:', error);
-      // Fallback to default testimonials on error
+      setError('Failed to load testimonials');
+      // Use default testimonials on error
       setTestimonials(defaultTestimonials);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const renderStars = (rating: number) => {
+  useEffect(() => {
+    fetchTestimonials();
+  }, [fetchTestimonials]);
+
+  const renderStars = useCallback((rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
         key={i} 
@@ -95,26 +93,7 @@ const Testimonials = () => {
         className={i < rating ? "text-yellow-500 fill-current" : "text-gray-300"} 
       />
     ));
-  };
-
-  if (loading) {
-    return (
-      <section id="testimonials" className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">What Our Customers Say</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Read testimonials from our satisfied customers who have experienced amazing journeys with us.
-            </p>
-          </div>
-          <div className="flex items-center justify-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-travel-orange"></div>
-            <span className="ml-2 text-gray-600">Loading testimonials...</span>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  }, []);
 
   return (
     <section id="testimonials" className="py-16 bg-white">
@@ -125,6 +104,19 @@ const Testimonials = () => {
             Read testimonials from our satisfied customers who have experienced amazing journeys with us.
           </p>
         </div>
+        
+        {loading && (
+          <div className="flex items-center justify-center mb-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-travel-orange"></div>
+            <span className="ml-2 text-gray-600">Loading testimonials...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="text-center mb-8 text-red-600">
+            <p>{error}</p>
+          </div>
+        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {testimonials.map((testimonial) => (

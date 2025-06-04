@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,16 +31,16 @@ const QuickUserPromotion = () => {
   const { adminUser } = useAdminAuth();
 
   // Generate a secure password
-  const generatePassword = () => {
+  const generatePassword = useCallback(() => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
     let password = '';
     for (let i = 0; i < 12; i++) {
       password += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     setPassword(password);
-  };
+  }, []);
 
-  const createUser = async () => {
+  const createUser = useCallback(async () => {
     if (!email.trim() || !password.trim() || !name.trim()) {
       toast({
         title: "Error",
@@ -118,10 +118,10 @@ const QuickUserPromotion = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [email, password, name, role, adminUser?.id, toast]);
 
-  // Only show this component to super_admin users
-  if (adminUser?.role !== 'super_admin') {
+  // Only show this component to admin users (both admin and super_admin)
+  if (adminUser?.role !== 'admin') {
     return null;
   }
 

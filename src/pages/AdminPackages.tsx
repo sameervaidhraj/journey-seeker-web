@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import ImageUpload from '@/components/admin/ImageUpload';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -29,6 +29,8 @@ const AdminPackages = () => {
   const [packages, setPackages] = useState<PackageData[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
   
   const [newPackage, setNewPackage] = useState<Omit<PackageData, 'id'>>({
@@ -39,22 +41,37 @@ const AdminPackages = () => {
     image_url: ''
   });
 
+  const fetchPackages = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('packages')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching packages:', error);
+        throw error;
+      }
+
+      setPackages(data || []);
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch packages",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
+
   useEffect(() => {
     fetchPackages();
-  }, []);
-
-  const fetchPackages = async () => {
-    const { data, error } = await supabase
-      .from('packages')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error && data) {
-      setPackages(data);
-    }
-  };
+  }, [fetchPackages]);
   
-  const handleAddNewSubmit = async () => {
+  const handleAddNewSubmit = useCallback(async () => {
     if (!newPackage.title || !newPackage.description || !newPackage.price || !newPackage.duration || !newPackage.image_url) {
       toast({
         title: "Error",
@@ -64,89 +81,119 @@ const AdminPackages = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('packages')
-      .insert([newPackage])
-      .select()
-      .single();
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase
+        .from('packages')
+        .insert([newPackage])
+        .select()
+        .single();
 
-    if (error) {
+      if (error) {
+        console.error('Error adding package:', error);
+        throw error;
+      }
+
+      setPackages(prev => [data, ...prev]);
+      setIsAddingNew(false);
+      setNewPackage({
+        title: '',
+        description: '',
+        price: '',
+        duration: '',
+        image_url: ''
+      });
+
+      toast({
+        title: "Success",
+        description: "Package added successfully",
+      });
+    } catch (error) {
+      console.error('Error adding package:', error);
       toast({
         title: "Error",
         description: "Failed to add package",
         variant: "destructive"
       });
-      return;
+    } finally {
+      setSubmitting(false);
     }
-
-    setIsAddingNew(false);
-    setNewPackage({
-      title: '',
-      description: '',
-      price: '',
-      duration: '',
-      image_url: ''
-    });
-
-    toast({
-      title: "Success",
-      description: "Package added successfully",
-    });
-  };
+  }, [newPackage, toast]);
   
-  const handleDeletePackage = async (id: string) => {
-    const { error } = await supabase
-      .from('packages')
-      .delete()
-      .eq('id', id);
+  const handleDeletePackage = useCallback(async (id: string) => {
+    if (!confirm('Are you sure you want to delete this package?')) return;
 
-    if (error) {
+    try {
+      const { error } = await supabase
+        .from('packages')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting package:', error);
+        throw error;
+      }
+
+      setPackages(prev => prev.filter(pkg => pkg.id !== id));
+      toast({
+        title: "Success",
+        description: "Package deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting package:', error);
       toast({
         title: "Error",
         description: "Failed to delete package",
         variant: "destructive"
       });
-      return;
     }
-
-    setPackages(packages.filter(pkg => pkg.id !== id));
-    toast({
-      title: "Success",
-      description: "Package deleted successfully",
-    });
-  };
+  }, [toast]);
   
-  const handleSaveEdit = async (id: string, editedData: Partial<PackageData>) => {
-    const { error } = await supabase
-      .from('packages')
-      .update(editedData)
-      .eq('id', id);
+  const handleSaveEdit = useCallback(async (id: string, editedData: Partial<PackageData>) => {
+    try {
+      const { error } = await supabase
+        .from('packages')
+        .update(editedData)
+        .eq('id', id);
 
-    if (error) {
+      if (error) {
+        console.error('Error updating package:', error);
+        throw error;
+      }
+
+      setPackages(prev => prev.map(pkg => 
+        pkg.id === id ? { ...pkg, ...editedData } : pkg
+      ));
+      setIsEditing(null);
+      toast({
+        title: "Success",
+        description: "Package updated successfully",
+      });
+    } catch (error) {
+      console.error('Error updating package:', error);
       toast({
         title: "Error",
         description: "Failed to update package",
         variant: "destructive"
       });
-      return;
     }
+  }, [toast]);
 
-    setPackages(packages.map(pkg => 
-      pkg.id === id ? { ...pkg, ...editedData } : pkg
-    ));
-    setIsEditing(null);
-    toast({
-      title: "Success",
-      description: "Package updated successfully",
-    });
-  };
-
-  const handleImageUpload = (imageUrl: string) => {
-    setNewPackage({
-      ...newPackage,
+  const handleImageUpload = useCallback((imageUrl: string) => {
+    setNewPackage(prev => ({
+      ...prev,
       image_url: imageUrl
-    });
-  };
+    }));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-travel-orange"></div>
+        <span className="ml-2">Loading packages...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -155,6 +202,7 @@ const AdminPackages = () => {
         <Button 
           onClick={() => setIsAddingNew(!isAddingNew)}
           className="bg-travel-blue hover:bg-travel-blue-dark"
+          disabled={submitting}
         >
           {isAddingNew ? "Cancel" : "Add New Package"}
         </Button>
@@ -176,6 +224,7 @@ const AdminPackages = () => {
                   placeholder="e.g. Kerala Backwaters"
                   value={newPackage.title}
                   onChange={(e) => setNewPackage({...newPackage, title: e.target.value})}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -185,6 +234,7 @@ const AdminPackages = () => {
                   placeholder="e.g. ₹24,999"
                   value={newPackage.price}
                   onChange={(e) => setNewPackage({...newPackage, price: e.target.value})}
+                  disabled={submitting}
                 />
               </div>
               <div className="space-y-2">
@@ -194,6 +244,7 @@ const AdminPackages = () => {
                   placeholder="e.g. 5 days, 4 nights"
                   value={newPackage.duration}
                   onChange={(e) => setNewPackage({...newPackage, duration: e.target.value})}
+                  disabled={submitting}
                 />
               </div>
               <ImageUpload 
@@ -210,13 +261,29 @@ const AdminPackages = () => {
                 rows={4}
                 value={newPackage.description}
                 onChange={(e) => setNewPackage({...newPackage, description: e.target.value})}
+                disabled={submitting}
               />
             </div>
           </CardContent>
           <CardFooter className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsAddingNew(false)}>Cancel</Button>
-            <Button onClick={handleAddNewSubmit} className="bg-travel-blue hover:bg-travel-blue-dark">
-              Save Package
+            <Button 
+              variant="outline" 
+              onClick={() => setIsAddingNew(false)}
+              disabled={submitting}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleAddNewSubmit} 
+              className="bg-travel-blue hover:bg-travel-blue-dark"
+              disabled={submitting}
+            >
+              {submitting ? (
+                <div className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Saving...
+                </div>
+              ) : 'Save Package'}
             </Button>
           </CardFooter>
         </Card>
@@ -231,6 +298,9 @@ const AdminPackages = () => {
                 src={pkg.image_url} 
                 alt={pkg.title}
                 className="w-full h-full object-cover transition-transform hover:scale-105" 
+                onError={(e) => {
+                  e.currentTarget.src = "https://via.placeholder.com/300x200?text=Package+Image";
+                }}
               />
             </div>
             <CardHeader>
@@ -244,8 +314,20 @@ const AdminPackages = () => {
               <p className="text-gray-600 line-clamp-3">{pkg.description}</p>
             </CardContent>
             <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={() => setIsEditing(pkg.id)}>Edit</Button>
-              <Button variant="destructive" onClick={() => handleDeletePackage(pkg.id)}>Delete</Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditing(pkg.id)}
+                disabled={submitting}
+              >
+                Edit
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDeletePackage(pkg.id)}
+                disabled={submitting}
+              >
+                Delete
+              </Button>
             </CardFooter>
           </Card>
         ))}
