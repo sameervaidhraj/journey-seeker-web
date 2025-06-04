@@ -2,18 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Plane, IndianRupee } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const FlightSection = () => {
-  const { toast } = useToast();
-
-  const handleBooking = (flight: any) => {
-    toast({
-      title: "Booking Request",
-      description: `We'll contact you shortly for ${flight.from} to ${flight.to} flight booking.`,
-    });
-  };
-
   const popularFlights = [
     { from: "New Delhi", to: "Mumbai", price: "₹3,499", date: "Nov 15 - Nov 22" },
     { from: "Mumbai", to: "Goa", price: "₹2,899", date: "Dec 3 - Dec 17" },
@@ -57,11 +47,7 @@ const FlightSection = () => {
                 </div>
               </div>
               <p className="text-gray-500 text-sm mb-4">{flight.date}</p>
-              <Button 
-                variant="outline" 
-                className="w-full border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
-                onClick={() => handleBooking(flight)}
-              >
+              <Button variant="outline" className="w-full border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white">
                 Book Now
               </Button>
             </div>

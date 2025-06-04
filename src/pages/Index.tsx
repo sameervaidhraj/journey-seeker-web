@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React from 'react';
 import Navbar from '@/components/Navbar';
 import HeroSection from '@/components/HeroSection';
 import PackageCard from '@/components/PackageCard';
@@ -8,87 +9,48 @@ import SpecialOffers from '@/components/SpecialOffers';
 import Testimonials from '@/components/Testimonials';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-interface Package {
-  id: string;
-  title: string;
-  description: string;
-  price: string;
-  duration: string;
-  image_url: string;
-}
 
 const Index = () => {
-  const [packages, setPackages] = useState<Package[]>([]);
-  const [email, setEmail] = useState('');
-  const { toast } = useToast();
-
-  const handleSubscribe = () => {
-    if (!email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address to subscribe.",
-        variant: "destructive",
-      });
-      return;
+  const featuredPackages = [
+    {
+      id: 1,
+      image: "https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?q=80&w=2070",
+      title: "Goa Beach Holiday",
+      location: "Goa, India",
+      duration: "5 Days / 4 Nights",
+      price: "19,999",
+      rating: 5,
+      discount: "20% OFF"
+    },
+    {
+      id: 2,
+      image: "https://images.unsplash.com/photo-1503917988258-f87a78e3c995?q=80&w=1887",
+      title: "Kerala Backwaters",
+      location: "Kerala, India",
+      duration: "4 Days / 3 Nights",
+      price: "15,999",
+      rating: 4
+    },
+    {
+      id: 3,
+      image: "https://images.unsplash.com/photo-1512100356356-de1b84283e18?q=80&w=1975",
+      title: "Rajasthan Heritage Tour",
+      location: "Jaipur & Udaipur",
+      duration: "7 Days / 6 Nights",
+      price: "24,999",
+      rating: 5,
+      discount: "15% OFF"
+    },
+    {
+      id: 4,
+      image: "https://images.unsplash.com/photo-1535152903264-15fc4895bba9?q=80&w=1160",
+      title: "Manali Adventure",
+      location: "Himachal Pradesh, India",
+      duration: "5 Days / 4 Nights",
+      price: "16,999",
+      rating: 4
     }
-    
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      toast({
-        title: "Invalid Email",
-        description: "Please enter a valid email address.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    toast({
-      title: "Subscribed Successfully!",
-      description: "Thank you for subscribing to our newsletter. You'll receive the latest travel deals and updates.",
-    });
-    setEmail('');
-  };
-
-  useEffect(() => {
-    // Fetch initial packages
-    const fetchPackages = async () => {
-      const { data, error } = await supabase
-        .from('packages')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setPackages(data);
-      }
-    };
-
-    fetchPackages();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('packages-changes')
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'packages' },
-        (payload) => {
-          if (payload.eventType === 'INSERT') {
-            setPackages(prev => [payload.new as Package, ...prev]);
-          } else if (payload.eventType === 'DELETE') {
-            setPackages(prev => prev.filter(pkg => pkg.id !== payload.old.id));
-          } else if (payload.eventType === 'UPDATE') {
-            setPackages(prev => prev.map(pkg => 
-              pkg.id === payload.new.id ? payload.new as Package : pkg
-            ));
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  ];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -108,15 +70,16 @@ const Index = () => {
             </div>
             
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {packages.map((pkg) => (
+              {featuredPackages.map((pkg) => (
                 <PackageCard
                   key={pkg.id}
-                  image={pkg.image_url}
+                  image={pkg.image}
                   title={pkg.title}
-                  location={pkg.title}
+                  location={pkg.location}
                   duration={pkg.duration}
                   price={pkg.price}
-                  rating={5}
+                  rating={pkg.rating}
+                  discount={pkg.discount}
                 />
               ))}
             </div>
@@ -208,14 +171,9 @@ const Index = () => {
                 <input
                   type="email"
                   placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   className="px-4 py-3 rounded-lg flex-grow focus:outline-none"
                 />
-                <Button 
-                  className="bg-travel-orange hover:bg-travel-orange/90 whitespace-nowrap"
-                  onClick={handleSubscribe}
-                >
+                <Button className="bg-travel-orange hover:bg-travel-orange/90 whitespace-nowrap">
                   Subscribe Now
                 </Button>
               </div>

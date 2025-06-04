@@ -93,7 +93,7 @@ const Navbar = () => {
     );
   }
 
-  // Regular user navbar - changed "User Login" to "Login"
+  // Regular user navbar - removed Admin Portal button
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3">
@@ -129,7 +129,7 @@ const Navbar = () => {
               className="border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
               onClick={() => handleNavigation("/login")}
             >
-              Login
+              User Login
             </Button>
           </div>
 
@@ -189,7 +189,7 @@ const Navbar = () => {
                 className="w-full border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
                 onClick={() => handleNavigation("/login")}
               >
-                Login
+                User Login
               </Button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,158 +12,43 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import ForgotPassword from '@/components/auth/ForgotPassword';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
-const AdminLogin = React.memo(() => {
+const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
-  const { login, isAuthenticated, loading } = useAdminAuth();
+  const { login, isAuthenticated } = useAdminAuth();
 
-  // Memoized form validation
-  const isFormComplete = useMemo(() => {
-    return email.trim() !== '' && password.trim() !== '';
-  }, [email, password]);
-
-  // Redirect if already authenticated
+  // If already authenticated, redirect to admin dashboard
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      navigate('/admin/dashboard', { replace: true });
+    if (isAuthenticated) {
+      navigate('/admin/dashboard');
     }
-  }, [isAuthenticated, loading, navigate]);
+  }, [isAuthenticated, navigate]);
 
-  const handleLogin = useCallback(async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isFormComplete) {
+    if (!email || !password) {
       toast({
         title: "Error",
-        description: "Please fill in all fields before attempting to login",
+        description: "Please fill in all fields",
         variant: "destructive",
       });
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const success = await login(email.trim(), password);
-      
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Logged in successfully!",
-        });
-        navigate('/admin/dashboard', { replace: true });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      toast({
-        title: "Login Failed",
-        description: "An unexpected error occurred",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+    const success = await login(email, password);
+    
+    if (success) {
+      navigate('/admin/dashboard');
     }
-  }, [email, password, isFormComplete, login, navigate, toast]);
-
-  // Memoized loading component
-  const LoadingComponent = useMemo(() => (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
-        <div className="text-lg flex items-center gap-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-travel-orange"></div>
-          Loading...
-        </div>
-      </div>
-      <Footer />
-    </div>
-  ), []);
-
-  // Memoized login form
-  const LoginForm = useMemo(() => (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
-        <CardDescription className="text-center">
-          Please enter your admin credentials below to access the dashboard
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="admin@asbtravels.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="email"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password *</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="current-password"
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className={`w-full ${isFormComplete 
-              ? 'bg-travel-orange hover:bg-travel-orange/90' 
-              : 'bg-gray-400 cursor-not-allowed'
-            }`}
-            disabled={!isFormComplete || isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Signing In...
-              </div>
-            ) : isFormComplete ? 'Admin Sign In' : 'Please Fill All Fields'}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-2">
-        <button
-          type="button"
-          onClick={() => setShowForgotPassword(true)}
-          className="text-sm text-travel-orange hover:underline"
-          disabled={isLoading}
-        >
-          Forgot your password?
-        </button>
-        <div className="text-center text-sm text-gray-600">
-          Need help accessing your account?{" "}
-          <a href="/contact" className="text-travel-orange hover:underline">
-            Contact Support
-          </a>
-        </div>
-      </CardFooter>
-    </Card>
-  ), [email, password, isFormComplete, isLoading, handleLogin]);
-
-  if (loading) {
-    return LoadingComponent;
-  }
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -171,19 +56,59 @@ const AdminLogin = React.memo(() => {
       
       <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
         <div className="w-full max-w-md px-4">
-          {showForgotPassword ? (
-            <ForgotPassword onBack={() => setShowForgotPassword(false)} />
-          ) : (
-            LoginForm
-          )}
+          <Card>
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
+              <CardDescription className="text-center">
+                Enter your admin credentials to access the dashboard
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email" 
+                    placeholder="admin@asbtravels.com" 
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <a href="/admin/forgot-password" className="text-sm text-travel-orange hover:underline">
+                      Forgot password?
+                    </a>
+                  </div>
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-travel-orange hover:bg-travel-orange/90">
+                  Admin Sign In
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter className="flex justify-center">
+              <div className="text-center text-sm text-gray-600">
+                Need an admin account?{" "}
+                <a href="/admin/register" className="text-travel-orange hover:underline">
+                  Register as Admin
+                </a>
+              </div>
+            </CardFooter>
+          </Card>
         </div>
       </div>
       
       <Footer />
     </div>
   );
-});
-
-AdminLogin.displayName = 'AdminLogin';
+};
 
 export default AdminLogin;

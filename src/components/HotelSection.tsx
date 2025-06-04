@@ -2,18 +2,8 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { MapPin, Star } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 
 const HotelSection = () => {
-  const { toast } = useToast();
-
-  const handleBooking = (hotel: any) => {
-    toast({
-      title: "Booking Request",
-      description: `We'll contact you shortly for ${hotel.name} hotel booking.`,
-    });
-  };
-
   const hotels = [
     {
       name: "Grand Plaza Hotel",
@@ -81,12 +71,7 @@ const HotelSection = () => {
                     <span className="text-xs text-gray-500">From</span>
                     <div className="text-travel-blue font-bold">{hotel.price}<span className="text-xs font-normal">/night</span></div>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white"
-                    onClick={() => handleBooking(hotel)}
-                  >
+                  <Button size="sm" variant="outline" className="border-travel-blue text-travel-blue hover:bg-travel-blue hover:text-white">
                     Book Now
                   </Button>
                 </div>

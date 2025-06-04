@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,53 +20,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from '@/integrations/supabase/client';
-
-interface Offer {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  price: string;
-  original_price?: string;
-  discount: number;
-  validity?: string;
-  highlight?: string;
-  limited: boolean;
-}
 
 const AdminOffers = () => {
   const { toast } = useToast();
-  const [offers, setOffers] = useState<Offer[]>([]);
+  const [offers, setOffers] = useState([
+    {
+      id: 1,
+      category: "Holiday Package",
+      title: "Goa Beach Getaway",
+      description: "3 nights and 4 days at a luxury beach resort with all meals included",
+      price: "25,999",
+      originalPrice: "32,500",
+      discount: 20,
+      validity: "31 July 2025",
+      highlight: "Complimentary water sports session",
+      limited: true
+    },
+    {
+      id: 2,
+      category: "Flight Deal",
+      title: "Delhi-Mumbai Return",
+      description: "Special fare for return flights between Delhi and Mumbai",
+      price: "9,499",
+      originalPrice: "12,999",
+      discount: 27,
+      validity: "15 June 2025",
+      limited: false
+    },
+    {
+      id: 3,
+      category: "Hotel Offer",
+      title: "Luxury Stay in Udaipur",
+      description: "2 nights at a 5-star heritage property with breakfast and dinner",
+      price: "18,500",
+      originalPrice: "24,999",
+      discount: 26,
+      validity: "30 September 2025",
+      highlight: "Complimentary palace tour",
+      limited: false
+    },
+  ]);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newOffer, setNewOffer] = useState({
     category: "",
     title: "",
     description: "",
     price: "",
-    original_price: "",
+    originalPrice: "",
     discount: "",
     validity: "",
     highlight: "",
     limited: false
   });
 
-  useEffect(() => {
-    fetchOffers();
-  }, []);
-
-  const fetchOffers = async () => {
-    const { data, error } = await supabase
-      .from('offers')
-      .select('*')
-      .order('created_at', { ascending: false });
-    
-    if (!error && data) {
-      setOffers(data);
-    }
-  };
-
-  const handleAddOffer = async () => {
+  const handleAddOffer = () => {
     // Validate inputs
     if (!newOffer.title || !newOffer.category || !newOffer.price) {
       toast({
@@ -79,47 +86,31 @@ const AdminOffers = () => {
 
     // Calculate discount if not provided
     let discount = newOffer.discount ? parseInt(newOffer.discount) : 0;
-    if (!discount && newOffer.original_price && newOffer.price) {
-      const original = parseFloat(newOffer.original_price.replace(/,/g, ''));
+    if (!discount && newOffer.originalPrice && newOffer.price) {
+      const original = parseFloat(newOffer.originalPrice.replace(/,/g, ''));
       const current = parseFloat(newOffer.price.replace(/,/g, ''));
       if (original > current) {
         discount = Math.round(((original - current) / original) * 100);
       }
     }
 
-    const offerData = {
-      category: newOffer.category,
-      title: newOffer.title,
-      description: newOffer.description,
-      price: newOffer.price,
-      original_price: newOffer.original_price || null,
-      discount: discount,
-      validity: newOffer.validity || null,
-      highlight: newOffer.highlight || null,
-      limited: newOffer.limited
-    };
+    // Add new offer with a unique ID
+    const updatedOffers = [
+      ...offers,
+      {
+        id: offers.length + 1,
+        ...newOffer,
+        discount
+      }
+    ];
 
-    const { data, error } = await supabase
-      .from('offers')
-      .insert([offerData])
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add offer",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    setOffers(updatedOffers);
     setNewOffer({
       category: "",
       title: "",
       description: "",
       price: "",
-      original_price: "",
+      originalPrice: "",
       discount: "",
       validity: "",
       highlight: "",
@@ -133,22 +124,10 @@ const AdminOffers = () => {
     });
   };
 
-  const handleDeleteOffer = async (id: string) => {
-    const { error } = await supabase
-      .from('offers')
-      .delete()
-      .eq('id', id);
+  const handleDeleteOffer = (id: number) => {
+    const updatedOffers = offers.filter(offer => offer.id !== id);
+    setOffers(updatedOffers);
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete offer",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setOffers(offers.filter(offer => offer.id !== id));
     toast({
       title: "Success",
       description: "Offer deleted successfully!"
@@ -213,11 +192,11 @@ const AdminOffers = () => {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="original_price">Original Price (₹)</Label>
+                  <Label htmlFor="originalPrice">Original Price (₹)</Label>
                   <Input 
-                    id="original_price" 
-                    value={newOffer.original_price}
-                    onChange={(e) => setNewOffer({...newOffer, original_price: e.target.value})}
+                    id="originalPrice" 
+                    value={newOffer.originalPrice}
+                    onChange={(e) => setNewOffer({...newOffer, originalPrice: e.target.value})}
                     placeholder="e.g. 32,500" 
                   />
                 </div>
@@ -294,8 +273,8 @@ const AdminOffers = () => {
                   </div>
                   
                   <div className="flex items-center">
-                    {offer.original_price && (
-                      <span className="line-through text-gray-400 mr-2">₹{offer.original_price}</span>
+                    {offer.originalPrice && (
+                      <span className="line-through text-gray-400 mr-2">₹{offer.originalPrice}</span>
                     )}
                     <span className="text-xl font-bold text-travel-blue">₹{offer.price}</span>
                     {offer.discount > 0 && (
