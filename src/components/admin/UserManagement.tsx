@@ -29,19 +29,22 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 import { Plus, Edit, Trash2, Check, X, RefreshCw } from 'lucide-react';
-import QuickUserPromotion from './QuickUserPromotion';
 import UserDebugInfo from './UserDebugInfo';
-import QuickAdminCreator from './QuickAdminCreator';
 
 interface AppUser {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'editor' | 'viewer';
+  role: 'admin' | 'viewer';
   status: 'active' | 'pending' | 'suspended';
   created_at: string;
   created_by: string | null;
 }
+
+const ADMIN_EMAILS = [
+  'sameervaidhraj@gmail.com',
+  'asbtravelssjp@gmail.com'
+];
 
 const UserManagement = () => {
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -113,6 +116,16 @@ const UserManagement = () => {
       toast({
         title: "Error",
         description: "Password must be at least 6 characters long",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if trying to create admin for non-admin email
+    if (newUser.role === 'admin' && !ADMIN_EMAILS.includes(newUser.email.toLowerCase())) {
+      toast({
+        title: "Error",
+        description: "Only specific emails can be assigned admin role. Use viewer role for regular users.",
         variant: "destructive",
       });
       return;
@@ -207,7 +220,17 @@ const UserManagement = () => {
     }
   };
 
-  const deleteUser = async (userId: string) => {
+  const deleteUser = async (userId: string, userEmail: string) => {
+    // Prevent deletion of admin users
+    if (ADMIN_EMAILS.includes(userEmail)) {
+      toast({
+        title: "Error",
+        description: "Cannot delete admin users",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!confirm('Are you sure you want to delete this user?')) return;
 
     try {
@@ -241,9 +264,7 @@ const UserManagement = () => {
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case 'super_admin': return 'bg-red-100 text-red-800';
       case 'admin': return 'bg-orange-100 text-orange-800';
-      case 'editor': return 'bg-blue-100 text-blue-800';
       case 'viewer': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -258,20 +279,6 @@ const UserManagement = () => {
     }
   };
 
-  // Only super_admin can manage users
-  if (adminUser?.role !== 'super_admin') {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Access Denied</CardTitle>
-          <CardDescription>
-            You don't have permission to manage users.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-    );
-  }
-
   return (
     <div className="space-y-6">
       <div>
@@ -280,10 +287,6 @@ const UserManagement = () => {
       </div>
 
       <UserDebugInfo />
-
-      <QuickAdminCreator />
-
-      <QuickUserPromotion />
 
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
@@ -308,7 +311,7 @@ const UserManagement = () => {
             <DialogHeader>
               <DialogTitle>Create New User</DialogTitle>
               <DialogDescription>
-                Add a new user to the system with specific role and permissions.
+                Add a new user to the system. Only specific emails can be assigned admin role.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
@@ -356,13 +359,11 @@ const UserManagement = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="viewer">Viewer</SelectItem>
-                    <SelectItem value="editor">Editor</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="admin">Admin (Limited to specific emails)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={createUser} disabled={loading} className="w-full">
+              <Button onClick={createUser} disabled={loading || !newUser.email || !newUser.password || !newUser.name} className="w-full">
                 {loading ? (
                   <div className="flex items-center gap-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
@@ -370,6 +371,11 @@ const UserManagement = () => {
                   </div>
                 ) : 'Create User'}
               </Button>
+              <div className="text-xs text-gray-500 space-y-1">
+                <p>• Admin role is limited to: {ADMIN_EMAILS.join(', ')}</p>
+                <p>• Viewer users can access the main website</p>
+                <p>• Passwords must be at least 6 characters long</p>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
@@ -404,7 +410,7 @@ const UserManagement = () => {
                       <td className="px-4 py-3">{user.email}</td>
                       <td className="px-4 py-3">
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
-                          {user.role.replace('_', ' ')}
+                          {user.role}
                         </span>
                       </td>
                       <td className="px-4 py-3">
@@ -426,7 +432,7 @@ const UserManagement = () => {
                             >
                               <Check size={14} />
                             </Button>
-                          ) : user.status === 'active' && user.role !== 'super_admin' ? (
+                          ) : user.status === 'active' && !ADMIN_EMAILS.includes(user.email) ? (
                             <Button
                               size="sm"
                               variant="outline"
@@ -436,11 +442,11 @@ const UserManagement = () => {
                               <X size={14} />
                             </Button>
                           ) : null}
-                          {user.role !== 'super_admin' && (
+                          {!ADMIN_EMAILS.includes(user.email) && (
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => deleteUser(user.id)}
+                              onClick={() => deleteUser(user.id, user.email)}
                               className="text-red-600 hover:text-red-700"
                             >
                               <Trash2 size={14} />

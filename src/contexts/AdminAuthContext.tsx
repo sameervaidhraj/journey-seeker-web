@@ -20,9 +20,15 @@ export type AdminUser = {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'viewer';
-  status: 'active' | 'pending' | 'suspended';
+  role: 'admin';
+  status: 'active';
 };
+
+// Fixed admin emails
+const ADMIN_EMAILS = [
+  'sameervaidhraj@gmail.com',
+  'asbtravelssjp@gmail.com'
+];
 
 // Create the context with default values
 const AdminAuthContext = createContext<AdminAuthContextType>({
@@ -47,14 +53,18 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Check for existing session and set up auth state listener
   useEffect(() => {
+    let mounted = true;
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session);
+        if (!mounted) return;
+        
+        console.log('Admin auth state changed:', event, session?.user?.email);
         setSession(session);
         
-        if (session?.user) {
-          await fetchUserProfile(session.user);
+        if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
+          await fetchAdminProfile(session.user);
         } else {
           setAdminUser(null);
           setIsAuthenticated(false);
@@ -65,57 +75,63 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
       setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user);
+      if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
+        fetchAdminProfile(session.user);
       } else {
         setLoading(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const fetchUserProfile = async (user: User) => {
+  const fetchAdminProfile = async (user: User) => {
     try {
-      console.log('Fetching profile for user:', user.email);
+      if (!ADMIN_EMAILS.includes(user.email || '')) {
+        console.log('User is not an admin:', user.email);
+        setAdminUser(null);
+        setIsAuthenticated(false);
+        return;
+      }
+
+      console.log('Fetching admin profile for:', user.email);
       
-      // First check if user exists in app_users
+      // Check if user exists in app_users
       let { data: appUser, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('email', user.email)
         .maybeSingle();
 
-      console.log('Found user:', appUser, 'Error:', error);
+      console.log('Found admin user:', appUser, 'Error:', error);
 
-      // If user doesn't exist in app_users, create them automatically
+      // If user doesn't exist in app_users, create them as admin
       if (!appUser && !error) {
-        console.log('User not found in app_users, creating...');
-        
-        // Determine role based on email and creation method
-        let role = 'admin'; // Default role for users created in Supabase admin panel
-        if (user.email === 'sameervaidhraj@gmail.com') {
-          role = 'super_admin';
-        }
+        console.log('Creating admin user in database...');
         
         const { data: newAppUser, error: insertError } = await supabase
           .from('app_users')
           .insert({
             auth_user_id: user.id,
-            name: user.user_metadata?.name || user.email?.split('@')[0] || 'User',
+            name: user.email === 'sameervaidhraj@gmail.com' ? 'Sameer Vaidhraj' : 'ASB Travels Admin',
             email: user.email,
-            role: role,
+            role: 'admin',
             status: 'active'
           })
           .select()
           .single();
 
         if (insertError) {
-          console.error('Error creating app_users record:', insertError);
+          console.error('Error creating admin user:', insertError);
           toast({
             title: "Setup Error",
-            description: "Failed to set up user profile. Please contact support.",
+            description: "Failed to set up admin profile. Please contact support.",
             variant: "destructive",
           });
           await supabase.auth.signOut();
@@ -123,11 +139,11 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
 
         appUser = newAppUser;
-        console.log('Created new user:', appUser);
+        console.log('Created new admin user:', appUser);
       }
 
       if (error) {
-        console.error('Error fetching user profile:', error);
+        console.error('Error fetching admin profile:', error);
         toast({
           title: "Access Error",
           description: "There was an error accessing your account. Please try again.",
@@ -138,10 +154,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (!appUser) {
-        console.log('No app user found');
+        console.log('No admin user found');
         toast({
-          title: "Account Setup Required",
-          description: "Your account needs to be set up. Please contact an administrator.",
+          title: "Access Denied",
+          description: "You don't have admin access to this system.",
           variant: "destructive",
         });
         await supabase.auth.signOut();
@@ -150,48 +166,29 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // Update auth_user_id if missing
       if (!appUser.auth_user_id) {
-        console.log('Updating auth_user_id for existing user...');
+        console.log('Updating auth_user_id for existing admin...');
         const { error: updateError } = await supabase
           .from('app_users')
           .update({ auth_user_id: user.id })
           .eq('id', appUser.id);
         
-        if (updateError) {
-          console.error('Error updating auth_user_id:', updateError);
-        } else {
+        if (!updateError) {
           appUser.auth_user_id = user.id;
         }
       }
 
-      if (appUser.status !== 'active') {
-        console.log('User status is not active:', appUser.status);
-        toast({
-          title: "Account Pending",
-          description: "Your account is pending approval from an administrator.",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
-        return;
-      }
-
-      console.log('Setting authenticated user:', appUser);
+      console.log('Setting authenticated admin user:', appUser);
       setAdminUser({
         id: appUser.id,
         name: appUser.name,
         email: appUser.email,
-        role: appUser.role as 'super_admin' | 'admin' | 'viewer',
-        status: appUser.status as 'active' | 'pending' | 'suspended',
+        role: 'admin',
+        status: 'active',
       });
       setIsAuthenticated(true);
       
-      console.log('User authenticated successfully:', {
-        role: appUser.role,
-        status: appUser.status,
-        email: appUser.email
-      });
-      
     } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+      console.error('Error in fetchAdminProfile:', error);
       toast({
         title: "Authentication Error",
         description: "Failed to authenticate. Please try logging in again.",
@@ -206,25 +203,27 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      console.log('Attempting login for:', email);
+      console.log('Attempting admin login for:', email);
+
+      // Check if email is an admin email
+      if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+        toast({
+          title: "Access Denied",
+          description: "You don't have admin access to this system.",
+          variant: "destructive",
+        });
+        return false;
+      }
       
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase(),
         password,
       });
 
       if (error) {
-        console.error('Login error:', error);
+        console.error('Admin login error:', error);
         
-        // Handle specific error cases
-        if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Login Successful",
-            description: "Logging you in...",
-          });
-          // For admin users, we'll auto-confirm them
-          return true;
-        } else if (error.message.includes('Invalid login credentials')) {
+        if (error.message.includes('Invalid login credentials')) {
           toast({
             title: "Invalid Credentials",
             description: "Please check your email and password and try again.",
@@ -240,10 +239,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         return false;
       }
 
-      console.log('Login successful:', data);
+      console.log('Admin login successful:', data);
       return true;
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Admin login error:', error);
       toast({
         title: "Login Failed",
         description: "An unexpected error occurred",

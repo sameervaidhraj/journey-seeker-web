@@ -24,16 +24,64 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { supabase } from '@/integrations/supabase/client';
 
+// All Indian states and union territories
+const INDIAN_STATES = [
+  'Andhra Pradesh',
+  'Arunachal Pradesh',
+  'Assam',
+  'Bihar',
+  'Chhattisgarh',
+  'Goa',
+  'Gujarat',
+  'Haryana',
+  'Himachal Pradesh',
+  'Jharkhand',
+  'Karnataka',
+  'Kerala',
+  'Madhya Pradesh',
+  'Maharashtra',
+  'Manipur',
+  'Meghalaya',
+  'Mizoram',
+  'Nagaland',
+  'Odisha',
+  'Punjab',
+  'Rajasthan',
+  'Sikkim',
+  'Tamil Nadu',
+  'Telangana',
+  'Tripura',
+  'Uttar Pradesh',
+  'Uttarakhand',
+  'West Bengal',
+  'Andaman and Nicobar Islands',
+  'Chandigarh',
+  'Dadra and Nagar Haveli and Daman and Diu',
+  'Delhi',
+  'Jammu and Kashmir',
+  'Ladakh',
+  'Lakshadweep',
+  'Puducherry'
+];
+
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const validatePhone = (phone: string) => {
+    return /^[6-9]\d{9}$/.test(phone);
+  };
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,10 +95,37 @@ const Login = () => {
       return;
     }
 
-    if (!isLogin && (!name || !phone || !city)) {
+    if (!validateEmail(email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isLogin && (!name || !phone || !state)) {
       toast({
         title: "Error",
         description: "Please fill in all fields for registration",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isLogin && !validatePhone(phone)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
         variant: "destructive",
       });
       return;
@@ -61,7 +136,7 @@ const Login = () => {
     try {
       if (isLogin) {
         // Login
-        console.log('Attempting login for:', email);
+        console.log('Attempting user login for:', email);
         const { data, error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),
           password,
@@ -70,11 +145,10 @@ const Login = () => {
         if (error) {
           console.error('Login error:', error);
           
-          // Handle specific error cases
           if (error.message.includes('Email not confirmed')) {
             toast({
-              title: "Email Not Confirmed",
-              description: "Please check your email and click the confirmation link, or contact support if you need help.",
+              title: "Account Not Verified",
+              description: "Please check your email and click the confirmation link to verify your account before signing in.",
               variant: "destructive",
             });
           } else if (error.message.includes('Invalid login credentials')) {
@@ -93,7 +167,7 @@ const Login = () => {
           return;
         }
 
-        console.log('Login successful:', data);
+        console.log('User login successful:', data);
         toast({
           title: "Success",
           description: "Logged in successfully!",
@@ -101,7 +175,11 @@ const Login = () => {
         navigate('/user-dashboard');
       } else {
         // Register new user as viewer
-        console.log('Attempting registration for:', email);
+        console.log('Attempting user registration for:', email);
+        
+        // Get current domain for email redirect
+        const currentDomain = window.location.origin;
+        
         const { data, error } = await supabase.auth.signUp({
           email: email.trim().toLowerCase(),
           password,
@@ -109,9 +187,9 @@ const Login = () => {
             data: {
               name: name.trim(),
               phone: phone.trim(),
-              city,
+              state,
             },
-            emailRedirectTo: `${window.location.origin}/user-dashboard`
+            emailRedirectTo: `${currentDomain}/user-dashboard`
           }
         });
 
@@ -151,7 +229,7 @@ const Login = () => {
           if (profileError) {
             console.error('Error creating user profile:', profileError);
             toast({
-              title: "Profile Creation Error",
+              title: "Profile Setup Error",
               description: "Account created but profile setup failed. Please contact support.",
               variant: "destructive",
             });
@@ -159,8 +237,8 @@ const Login = () => {
         }
 
         toast({
-          title: "Success",
-          description: "Account created successfully! Please check your email for confirmation, then you can sign in.",
+          title: "Registration Successful!",
+          description: "Please check your email for a confirmation link. Click the link to verify your account, then you can sign in.",
         });
         
         setIsLogin(true);
@@ -169,7 +247,7 @@ const Login = () => {
         setPassword('');
         setName('');
         setPhone('');
-        setCity('');
+        setState('');
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -240,22 +318,21 @@ const Login = () => {
                         disabled={loading}
                         required
                       />
+                      <p className="text-xs text-gray-500">Enter 10-digit number starting with 6, 7, 8, or 9</p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="city">City *</Label>
-                      <Select onValueChange={setCity} required disabled={loading}>
+                      <Label htmlFor="state">State/UT *</Label>
+                      <Select value={state} onValueChange={setState} required disabled={loading}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select your city" />
+                          <SelectValue placeholder="Select your state" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="delhi">Delhi</SelectItem>
-                          <SelectItem value="mumbai">Mumbai</SelectItem>
-                          <SelectItem value="bangalore">Bangalore</SelectItem>
-                          <SelectItem value="chennai">Chennai</SelectItem>
-                          <SelectItem value="kolkata">Kolkata</SelectItem>
-                          <SelectItem value="hyderabad">Hyderabad</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
+                        <SelectContent className="max-h-60">
+                          {INDIAN_STATES.map((stateName) => (
+                            <SelectItem key={stateName} value={stateName}>
+                              {stateName}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -296,8 +373,8 @@ const Login = () => {
                 </Button>
               </form>
             </CardContent>
-            <CardFooter className="flex flex-col">
-              <div className="text-center text-sm text-gray-600 mt-2">
+            <CardFooter className="flex flex-col space-y-2">
+              <div className="text-center text-sm text-gray-600">
                 {isLogin ? "Don't have an account?" : "Already have an account?"}{" "}
                 <button
                   type="button"
@@ -307,7 +384,7 @@ const Login = () => {
                     setPassword('');
                     setName('');
                     setPhone('');
-                    setCity('');
+                    setState('');
                   }}
                   className="text-travel-blue hover:underline"
                   disabled={loading}
@@ -315,6 +392,11 @@ const Login = () => {
                   {isLogin ? 'Create an account' : 'Sign in'}
                 </button>
               </div>
+              {!isLogin && (
+                <div className="text-xs text-gray-500 text-center">
+                  By creating an account, you agree to our Terms of Service and Privacy Policy
+                </div>
+              )}
             </CardFooter>
           </Card>
         </div>

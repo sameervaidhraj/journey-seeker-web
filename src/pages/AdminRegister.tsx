@@ -31,6 +31,20 @@ const AdminRegister = () => {
   // Strong, secure admin registration code
   const ADMIN_REGISTRATION_CODE = "ASB_SECURE_2024_ADMIN_CODE_9X7P";
 
+  // Allowed admin emails
+  const ADMIN_EMAILS = [
+    'sameervaidhraj@gmail.com',
+    'asbtravelssjp@gmail.com'
+  ];
+
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    return /^[6-9]\d{9}$/.test(phone);
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -39,6 +53,25 @@ const AdminRegister = () => {
       toast({
         title: "Error",
         description: "Please fill in all fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      toast({
+        title: "Error",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if email is in allowed admin emails
+    if (!ADMIN_EMAILS.includes(email.toLowerCase())) {
+      toast({
+        title: "Error",
+        description: "This email is not authorized for admin registration. Only specific emails can create admin accounts.",
         variant: "destructive",
       });
       return;
@@ -62,10 +95,10 @@ const AdminRegister = () => {
       return;
     }
 
-    if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+    if (!validatePhone(phone)) {
       toast({
         title: "Error",
-        description: "Please enter a valid 10-digit phone number",
+        description: "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9",
         variant: "destructive",
       });
       return;
@@ -139,11 +172,20 @@ const AdminRegister = () => {
 
     } catch (error: any) {
       console.error('Registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: error.message || "Failed to create admin account",
-        variant: "destructive",
-      });
+      
+      if (error.message.includes('User already registered')) {
+        toast({
+          title: "Account Exists",
+          description: "An account with this email already exists. Please try logging in instead.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: error.message || "Failed to create admin account",
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -159,7 +201,7 @@ const AdminRegister = () => {
             <CardHeader className="space-y-1">
               <CardTitle className="text-2xl text-center">Create Admin Account</CardTitle>
               <CardDescription className="text-center">
-                Enter your details to create a new admin account
+                Enter your details to create a new admin account (Limited to authorized emails)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -187,6 +229,9 @@ const AdminRegister = () => {
                     disabled={loading}
                     required
                   />
+                  <p className="text-xs text-gray-500">
+                    Only authorized emails can create admin accounts
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -199,6 +244,9 @@ const AdminRegister = () => {
                     disabled={loading}
                     required
                   />
+                  <p className="text-xs text-gray-500">
+                    Enter 10-digit number starting with 6, 7, 8, or 9
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
