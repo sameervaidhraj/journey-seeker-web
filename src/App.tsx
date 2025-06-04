@@ -15,6 +15,10 @@ import Flights from "./pages/Flights";
 import Hotels from "./pages/Hotels";
 import Offers from "./pages/Offers";
 import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import RefundPolicy from "./pages/RefundPolicy";
+import Terms from "./pages/Terms";
 
 // Admin Pages
 import AdminLogin from "./pages/AdminLogin";
@@ -24,6 +28,7 @@ import AdminPackages from "./pages/AdminPackages";
 import AdminHotels from "./pages/AdminHotels";
 import AdminFlights from "./pages/AdminFlights";
 import AdminOffers from "./pages/AdminOffers";
+import AdminSecretLogin from "./pages/AdminSecretLogin";
 
 // Shared Pages
 import NotFound from "./pages/NotFound";
@@ -157,11 +162,16 @@ const App = () => {
                 <Route path="/hotels" element={<Hotels />} />
                 <Route path="/offers" element={<Offers />} />
                 <Route path="/contact" element={<Contact />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/refund-policy" element={<RefundPolicy />} />
+                <Route path="/terms" element={<Terms />} />
                 
                 {/* Public Admin Routes */}
                 <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin/register" element={<AdminRegister />} />
+                <Route path="/admin-secret-entrance" element={<AdminSecretLogin />} />
                 
                 {/* Protected Admin Routes */}
                 <Route element={<ProtectedAdminRoute />}>

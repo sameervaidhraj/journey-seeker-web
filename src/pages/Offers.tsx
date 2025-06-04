@@ -1,11 +1,65 @@
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Badge } from "@/components/ui/badge";
 import { CalendarClock, Gift, Percent, Star } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+
+interface Offer {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  price: string;
+  original_price?: string;
+  discount: number;
+  validity?: string;
+  highlight?: string;
+  limited: boolean;
+}
 
 const Offers = () => {
+  const [offers, setOffers] = useState<Offer[]>([]);
+
+  useEffect(() => {
+    // Fetch initial offers
+    const fetchOffers = async () => {
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (!error && data) {
+        setOffers(data);
+      }
+    };
+
+    fetchOffers();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('all-offers-changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'offers' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            setOffers(prev => [payload.new as Offer, ...prev]);
+          } else if (payload.eventType === 'DELETE') {
+            setOffers(prev => prev.filter(offer => offer.id !== payload.old.id));
+          } else if (payload.eventType === 'UPDATE') {
+            setOffers(prev => prev.map(offer => 
+              offer.id === payload.new.id ? payload.new as Offer : offer
+            ));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -16,8 +70,8 @@ const Offers = () => {
         
         {/* Offers Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {offers.map((offer, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
+          {offers.map((offer) => (
+            <div key={offer.id} className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
               <div className="h-48 bg-gray-200 relative overflow-hidden">
                 {offer.discount && (
                   <div className="absolute top-0 right-0 bg-travel-orange text-white px-3 py-1 font-semibold">
@@ -55,8 +109,8 @@ const Offers = () => {
                 
                 <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-between">
                   <div>
-                    {offer.originalPrice && (
-                      <span className="line-through text-gray-400 mr-2">₹{offer.originalPrice}</span>
+                    {offer.original_price && (
+                      <span className="line-through text-gray-400 mr-2">₹{offer.original_price}</span>
                     )}
                     <span className="text-xl font-bold text-travel-blue">₹{offer.price}</span>
                   </div>

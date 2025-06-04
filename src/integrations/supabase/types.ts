@@ -9,16 +9,330 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      app_users: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          name: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["user_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          name: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["user_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "app_users_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offers: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string
+          discount: number | null
+          highlight: string | null
+          id: string
+          image_url: string | null
+          limited: boolean | null
+          original_price: string | null
+          price: string
+          title: string
+          updated_at: string | null
+          validity: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          image_url?: string | null
+          limited?: boolean | null
+          original_price?: string | null
+          price: string
+          title: string
+          updated_at?: string | null
+          validity?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          image_url?: string | null
+          limited?: boolean | null
+          original_price?: string | null
+          price?: string
+          title?: string
+          updated_at?: string | null
+          validity?: string | null
+        }
+        Relationships: []
+      }
+      packages: {
+        Row: {
+          created_at: string | null
+          description: string
+          duration: string
+          id: string
+          image_url: string
+          price: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          duration: string
+          id?: string
+          image_url: string
+          price: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          duration?: string
+          id?: string
+          image_url?: string
+          price?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pending_actions: {
+        Row: {
+          action_data: Json
+          action_type: string
+          created_at: string | null
+          id: string
+          record_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string | null
+          table_name: string
+          user_id: string | null
+        }
+        Insert: {
+          action_data: Json
+          action_type: string
+          created_at?: string | null
+          id?: string
+          record_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          table_name: string
+          user_id?: string | null
+        }
+        Update: {
+          action_data?: Json
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          record_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string | null
+          table_name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pending_actions_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pending_actions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          package_name: string | null
+          rating: number
+          review_text: string
+          status: string | null
+          updated_at: string | null
+          user_image: string | null
+          user_location: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          package_name?: string | null
+          rating: number
+          review_text: string
+          status?: string | null
+          updated_at?: string | null
+          user_image?: string | null
+          user_location?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          package_name?: string | null
+          rating?: number
+          review_text?: string
+          status?: string | null
+          updated_at?: string | null
+          user_image?: string | null
+          user_location?: string | null
+          user_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "app_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      special_offers: {
+        Row: {
+          category: string
+          created_at: string
+          description: string
+          discount: number | null
+          highlight: string | null
+          id: string
+          limited: boolean | null
+          original_price: string | null
+          price: string
+          title: string
+          updated_at: string
+          validity: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          limited?: boolean | null
+          original_price?: string | null
+          price: string
+          title: string
+          updated_at?: string
+          validity?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string
+          discount?: number | null
+          highlight?: string | null
+          id?: string
+          limited?: boolean | null
+          original_price?: string | null
+          price?: string
+          title?: string
+          updated_at?: string
+          validity?: string | null
+        }
+        Relationships: []
+      }
+      travel_packages: {
+        Row: {
+          created_at: string
+          description: string
+          duration: string
+          id: string
+          image_url: string
+          price: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          duration: string
+          id?: string
+          image_url: string
+          price: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          duration?: string
+          id?: string
+          image_url?: string
+          price?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      can_manage_users: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
+      is_super_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "super_admin" | "admin" | "editor" | "viewer"
+      user_status: "active" | "pending" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +447,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["super_admin", "admin", "editor", "viewer"],
+      user_status: ["active", "pending", "suspended"],
+    },
   },
 } as const

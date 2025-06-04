@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,47 +14,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import ImageUpload from '@/components/admin/ImageUpload';
+import { supabase } from '@/integrations/supabase/client';
 
-// Sample data structure for packages
 interface PackageData {
   id: string;
   title: string;
   description: string;
   price: string;
   duration: string;
-  imageUrl: string;
+  image_url: string;
 }
 
-// Sample packages data
-const initialPackages: PackageData[] = [
-  {
-    id: "pkg-001",
-    title: "Kerala Backwaters",
-    description: "Experience the serene backwaters of Kerala with this 5-day tour package.",
-    price: "₹24,999",
-    duration: "5 days, 4 nights",
-    imageUrl: "https://images.unsplash.com/photo-1602215399818-8747805976a4?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  },
-  {
-    id: "pkg-002",
-    title: "Goa Beach Vacation",
-    description: "Relax on the beautiful beaches of Goa with this all-inclusive package.",
-    price: "₹18,500",
-    duration: "4 days, 3 nights",
-    imageUrl: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  },
-  {
-    id: "pkg-003",
-    title: "Rajasthan Heritage Tour",
-    description: "Explore the rich cultural heritage and royal palaces of Rajasthan.",
-    price: "₹32,999",
-    duration: "7 days, 6 nights",
-    imageUrl: "https://images.unsplash.com/photo-1599661046289-e31897846e41?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8"
-  }
-];
-
 const AdminPackages = () => {
-  const [packages, setPackages] = useState<PackageData[]>(initialPackages);
+  const [packages, setPackages] = useState<PackageData[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const { toast } = useToast();
@@ -64,11 +36,26 @@ const AdminPackages = () => {
     description: '',
     price: '',
     duration: '',
-    imageUrl: ''
+    image_url: ''
   });
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    const { data, error } = await supabase
+      .from('packages')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (!error && data) {
+      setPackages(data);
+    }
+  };
   
-  const handleAddNewSubmit = () => {
-    if (!newPackage.title || !newPackage.description || !newPackage.price || !newPackage.duration || !newPackage.imageUrl) {
+  const handleAddNewSubmit = async () => {
+    if (!newPackage.title || !newPackage.description || !newPackage.price || !newPackage.duration || !newPackage.image_url) {
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -77,27 +64,51 @@ const AdminPackages = () => {
       return;
     }
 
-    const newId = `pkg-${(packages.length + 1).toString().padStart(3, '0')}`;
-    setPackages([...packages, { ...newPackage, id: newId }]);
+    const { data, error } = await supabase
+      .from('packages')
+      .insert([newPackage])
+      .select()
+      .single();
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add package",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsAddingNew(false);
     setNewPackage({
       title: '',
       description: '',
       price: '',
       duration: '',
-      imageUrl: ''
+      image_url: ''
     });
 
     toast({
       title: "Success",
       description: "Package added successfully",
     });
-    
-    // In a real app, this would also update the database
   };
   
-  const handleDeletePackage = (id: string) => {
-    // In a real app, this would confirm deletion and delete from database
+  const handleDeletePackage = async (id: string) => {
+    const { error } = await supabase
+      .from('packages')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete package",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setPackages(packages.filter(pkg => pkg.id !== id));
     toast({
       title: "Success",
@@ -105,8 +116,21 @@ const AdminPackages = () => {
     });
   };
   
-  const handleSaveEdit = (id: string, editedData: Partial<PackageData>) => {
-    // In a real app, this would update the database
+  const handleSaveEdit = async (id: string, editedData: Partial<PackageData>) => {
+    const { error } = await supabase
+      .from('packages')
+      .update(editedData)
+      .eq('id', id);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update package",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setPackages(packages.map(pkg => 
       pkg.id === id ? { ...pkg, ...editedData } : pkg
     ));
@@ -120,7 +144,7 @@ const AdminPackages = () => {
   const handleImageUpload = (imageUrl: string) => {
     setNewPackage({
       ...newPackage,
-      imageUrl
+      image_url: imageUrl
     });
   };
 
@@ -204,7 +228,7 @@ const AdminPackages = () => {
           <Card key={pkg.id} className="overflow-hidden">
             <div className="h-48 overflow-hidden">
               <img 
-                src={pkg.imageUrl} 
+                src={pkg.image_url} 
                 alt={pkg.title}
                 className="w-full h-full object-cover transition-transform hover:scale-105" 
               />

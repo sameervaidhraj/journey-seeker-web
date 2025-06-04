@@ -1,30 +1,92 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase } from '@/integrations/supabase/client';
+
+interface Review {
+  id: string;
+  user_name: string;
+  user_location: string;
+  user_image: string;
+  rating: number;
+  review_text: string;
+  package_name: string;
+}
 
 const Testimonials = () => {
-  const testimonials = [
+  const [testimonials, setTestimonials] = useState<Review[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTestimonials();
+  }, []);
+
+  const fetchTestimonials = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      if (error) {
+        console.error('Error fetching testimonials:', error);
+        // Fall back to default testimonials if database fetch fails
+        setTestimonials(defaultTestimonials);
+      } else {
+        setTestimonials(data || defaultTestimonials);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setTestimonials(defaultTestimonials);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Default testimonials as fallback
+  const defaultTestimonials = [
     {
-      name: "Sarah Johnson",
-      location: "New York",
-      image: "https://randomuser.me/api/portraits/women/32.jpg",
+      id: "1",
+      user_name: "Sarah Johnson",
+      user_location: "New York",
+      user_image: "https://randomuser.me/api/portraits/women/32.jpg",
       rating: 5,
-      text: "Our trip to Bali was absolutely amazing! The package was perfectly organized with great accommodations and activities. Will definitely book with JourneySeeker again.",
+      review_text: "Our trip to Bali was absolutely amazing! The package was perfectly organized with great accommodations and activities. Will definitely book with JourneySeeker again.",
+      package_name: "Bali Adventure Package"
     },
     {
-      name: "Michael Chen",
-      location: "San Francisco",
-      image: "https://randomuser.me/api/portraits/men/52.jpg",
+      id: "2",
+      user_name: "Michael Chen",
+      user_location: "San Francisco",
+      user_image: "https://randomuser.me/api/portraits/men/52.jpg",
       rating: 5,
-      text: "The European tour exceeded all our expectations. The hotels were fantastic, and the guided tours were informative and fun. Highly recommended!",
+      review_text: "The European tour exceeded all our expectations. The hotels were fantastic, and the guided tours were informative and fun. Highly recommended!",
+      package_name: "European Discovery Tour"
     },
     {
-      name: "Emily Rodriguez",
-      location: "Chicago",
-      image: "https://randomuser.me/api/portraits/women/68.jpg",
+      id: "3",
+      user_name: "Emily Rodriguez",
+      user_location: "Chicago",
+      user_image: "https://randomuser.me/api/portraits/women/68.jpg",
       rating: 4,
-      text: "Great experience booking our honeymoon through JourneySeeker. The customer service was excellent, and they helped us find the perfect romantic getaway.",
+      review_text: "Great experience booking our honeymoon through JourneySeeker. The customer service was excellent, and they helped us find the perfect romantic getaway.",
+      package_name: "Romantic Honeymoon Package"
     },
   ];
+
+  if (loading) {
+    return (
+      <section className="py-12 md:py-20 bg-travel-gray-light">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="section-title mx-auto">What Our Travelers Say</h2>
+            <p className="text-gray-600 mt-4">Loading testimonials...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-12 md:py-20 bg-travel-gray-light">
@@ -37,17 +99,17 @@ const Testimonials = () => {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {testimonials.map((testimonial, index) => (
-            <div key={index} className="testimonial-card">
+          {testimonials.slice(0, 3).map((testimonial) => (
+            <div key={testimonial.id} className="testimonial-card">
               <div className="flex items-center mb-4">
                 <img 
-                  src={testimonial.image} 
-                  alt={testimonial.name} 
+                  src={testimonial.user_image || "https://randomuser.me/api/portraits/lego/1.jpg"} 
+                  alt={testimonial.user_name} 
                   className="w-14 h-14 rounded-full object-cover mr-4"
                 />
                 <div>
-                  <h4 className="font-semibold">{testimonial.name}</h4>
-                  <p className="text-gray-500 text-sm">{testimonial.location}</p>
+                  <h4 className="font-semibold">{testimonial.user_name}</h4>
+                  <p className="text-gray-500 text-sm">{testimonial.user_location}</p>
                 </div>
               </div>
               
@@ -65,7 +127,13 @@ const Testimonials = () => {
                 ))}
               </div>
               
-              <p className="text-gray-700 italic">{testimonial.text}</p>
+              <p className="text-gray-700 italic">{testimonial.review_text}</p>
+              
+              {testimonial.package_name && (
+                <p className="text-sm text-travel-blue mt-2 font-medium">
+                  Package: {testimonial.package_name}
+                </p>
+              )}
             </div>
           ))}
         </div>
