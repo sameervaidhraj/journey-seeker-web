@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import ImageUpload from '@/components/admin/ImageUpload';
+import PackageCard from '@/components/admin/PackageCard';
 import { supabase } from '@/integrations/supabase/client';
 
 interface PackageData {
@@ -25,10 +26,9 @@ interface PackageData {
   image_url: string;
 }
 
-const AdminPackages = () => {
+const AdminPackages = React.memo(() => {
   const [packages, setPackages] = useState<PackageData[]>([]);
   const [isAddingNew, setIsAddingNew] = useState(false);
-  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { toast } = useToast();
@@ -42,6 +42,8 @@ const AdminPackages = () => {
   });
 
   const fetchPackages = useCallback(async () => {
+    let isMounted = true;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -54,21 +56,36 @@ const AdminPackages = () => {
         throw error;
       }
 
-      setPackages(data || []);
+      if (isMounted) {
+        setPackages(data || []);
+      }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch packages",
-        variant: "destructive"
-      });
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch packages",
+          variant: "destructive"
+        });
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [toast]);
 
   useEffect(() => {
-    fetchPackages();
+    const cleanup = fetchPackages();
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [fetchPackages]);
   
   const handleAddNewSubmit = useCallback(async () => {
@@ -121,8 +138,6 @@ const AdminPackages = () => {
   }, [newPackage, toast]);
   
   const handleDeletePackage = useCallback(async (id: string) => {
-    if (!confirm('Are you sure you want to delete this package?')) return;
-
     try {
       const { error } = await supabase
         .from('packages')
@@ -149,7 +164,7 @@ const AdminPackages = () => {
     }
   }, [toast]);
   
-  const handleSaveEdit = useCallback(async (id: string, editedData: Partial<PackageData>) => {
+  const handleUpdatePackage = useCallback(async (id: string, editedData: Partial<PackageData>) => {
     try {
       const { error } = await supabase
         .from('packages')
@@ -164,7 +179,7 @@ const AdminPackages = () => {
       setPackages(prev => prev.map(pkg => 
         pkg.id === id ? { ...pkg, ...editedData } : pkg
       ));
-      setIsEditing(null);
+      
       toast({
         title: "Success",
         description: "Package updated successfully",
@@ -185,6 +200,18 @@ const AdminPackages = () => {
       image_url: imageUrl
     }));
   }, []);
+
+  // Memoized package cards to prevent unnecessary re-renders
+  const packageCards = useMemo(() => 
+    packages.map((pkg) => (
+      <PackageCard
+        key={pkg.id}
+        package={pkg}
+        onDelete={handleDeletePackage}
+        onUpdate={handleUpdatePackage}
+        isLoading={submitting}
+      />
+    )), [packages, handleDeletePackage, handleUpdatePackage, submitting]);
 
   if (loading) {
     return (
@@ -291,46 +318,7 @@ const AdminPackages = () => {
 
       {/* List of Existing Packages */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {packages.map((pkg) => (
-          <Card key={pkg.id} className="overflow-hidden">
-            <div className="h-48 overflow-hidden">
-              <img 
-                src={pkg.image_url} 
-                alt={pkg.title}
-                className="w-full h-full object-cover transition-transform hover:scale-105" 
-                onError={(e) => {
-                  e.currentTarget.src = "https://via.placeholder.com/300x200?text=Package+Image";
-                }}
-              />
-            </div>
-            <CardHeader>
-              <CardTitle>{pkg.title}</CardTitle>
-              <div className="flex justify-between">
-                <p className="text-lg font-bold text-travel-blue">{pkg.price}</p>
-                <p className="text-sm text-gray-500">{pkg.duration}</p>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-600 line-clamp-3">{pkg.description}</p>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditing(pkg.id)}
-                disabled={submitting}
-              >
-                Edit
-              </Button>
-              <Button 
-                variant="destructive" 
-                onClick={() => handleDeletePackage(pkg.id)}
-                disabled={submitting}
-              >
-                Delete
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {packageCards}
       </div>
 
       {/* No Packages Message */}
@@ -342,6 +330,8 @@ const AdminPackages = () => {
       )}
     </div>
   );
-};
+});
+
+AdminPackages.displayName = 'AdminPackages';
 
 export default AdminPackages;

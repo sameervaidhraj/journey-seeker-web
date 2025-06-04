@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -12,8 +13,8 @@ interface Testimonial {
   package_name?: string;
 }
 
-// Default testimonials as fallback
-const defaultTestimonials = [
+// Memoized default testimonials to prevent recreation
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
   {
     id: 'default-1',
     user_name: "Priya Sharma",
@@ -43,49 +44,62 @@ const defaultTestimonials = [
   }
 ];
 
-const Testimonials = () => {
-  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
+const Testimonials = React.memo(() => {
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(DEFAULT_TESTIMONIALS);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const fetchTestimonials = useCallback(async () => {
+    let isMounted = true;
+    
     try {
       setLoading(true);
-      setError(null);
       
-      const { data, error: fetchError } = await supabase
+      const { data, error } = await supabase
         .from('reviews')
         .select('*')
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(6);
 
-      if (fetchError) {
-        console.error('Error fetching testimonials:', fetchError);
-        throw fetchError;
+      if (error) {
+        console.error('Error fetching testimonials:', error);
+        return;
       }
 
-      if (data && data.length > 0) {
-        setTestimonials(data);
-      } else {
-        // Keep default testimonials if no database testimonials found
-        setTestimonials(defaultTestimonials);
+      if (isMounted) {
+        if (data && data.length > 0) {
+          setTestimonials(data);
+        } else {
+          setTestimonials(DEFAULT_TESTIMONIALS);
+        }
       }
     } catch (error) {
-      console.error('Error fetching testimonials:', error);
-      setError('Failed to load testimonials');
-      // Use default testimonials on error
-      setTestimonials(defaultTestimonials);
+      console.error('Error in fetchTestimonials:', error);
+      if (isMounted) {
+        setTestimonials(DEFAULT_TESTIMONIALS);
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   useEffect(() => {
-    fetchTestimonials();
+    const cleanup = fetchTestimonials();
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [fetchTestimonials]);
 
-  const renderStars = useCallback((rating: number) => {
+  // Memoized star rendering to prevent re-renders
+  const renderStars = useMemo(() => (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
         key={i} 
@@ -94,6 +108,44 @@ const Testimonials = () => {
       />
     ));
   }, []);
+
+  // Memoized testimonial cards
+  const testimonialCards = useMemo(() => 
+    testimonials.map((testimonial) => (
+      <div key={testimonial.id} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <div className="flex items-center mb-4">
+          <img 
+            src={testimonial.user_image || "https://via.placeholder.com/50x50?text=?"} 
+            alt={testimonial.user_name}
+            className="w-12 h-12 rounded-full object-cover mr-4"
+            loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = "https://via.placeholder.com/50x50?text=?";
+            }}
+          />
+          <div>
+            <h4 className="font-semibold text-gray-800">{testimonial.user_name}</h4>
+            {testimonial.user_location && (
+              <p className="text-sm text-gray-600">{testimonial.user_location}</p>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex items-center mb-3">
+          {renderStars(testimonial.rating)}
+        </div>
+        
+        <p className="text-gray-700 mb-3 leading-relaxed">
+          "{testimonial.review_text}"
+        </p>
+        
+        {testimonial.package_name && (
+          <div className="text-xs text-travel-orange font-medium border-t pt-3">
+            {testimonial.package_name}
+          </div>
+        )}
+      </div>
+    )), [testimonials, renderStars]);
 
   return (
     <section id="testimonials" className="py-16 bg-white">
@@ -111,52 +163,15 @@ const Testimonials = () => {
             <span className="ml-2 text-gray-600">Loading testimonials...</span>
           </div>
         )}
-
-        {error && (
-          <div className="text-center mb-8 text-red-600">
-            <p>{error}</p>
-          </div>
-        )}
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {testimonials.map((testimonial) => (
-            <div key={testimonial.id} className="bg-gray-50 p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
-              <div className="flex items-center mb-4">
-                <img 
-                  src={testimonial.user_image || "https://via.placeholder.com/50x50?text=?"} 
-                  alt={testimonial.user_name}
-                  className="w-12 h-12 rounded-full object-cover mr-4"
-                  onError={(e) => {
-                    e.currentTarget.src = "https://via.placeholder.com/50x50?text=?";
-                  }}
-                />
-                <div>
-                  <h4 className="font-semibold text-gray-800">{testimonial.user_name}</h4>
-                  {testimonial.user_location && (
-                    <p className="text-sm text-gray-600">{testimonial.user_location}</p>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex items-center mb-3">
-                {renderStars(testimonial.rating)}
-              </div>
-              
-              <p className="text-gray-700 mb-3 leading-relaxed">
-                "{testimonial.review_text}"
-              </p>
-              
-              {testimonial.package_name && (
-                <div className="text-xs text-travel-orange font-medium border-t pt-3">
-                  {testimonial.package_name}
-                </div>
-              )}
-            </div>
-          ))}
+          {testimonialCards}
         </div>
       </div>
     </section>
   );
-};
+});
+
+Testimonials.displayName = 'Testimonials';
 
 export default Testimonials;
