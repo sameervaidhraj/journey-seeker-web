@@ -53,13 +53,9 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Check for existing session and set up auth state listener
   useEffect(() => {
-    let mounted = true;
-    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (!mounted) return;
-        
         console.log('Admin auth state changed:', event, session?.user?.email);
         setSession(session);
         
@@ -75,8 +71,6 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
       setSession(session);
       if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
         fetchAdminProfile(session.user);
@@ -85,10 +79,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     });
 
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const fetchAdminProfile = async (user: User) => {

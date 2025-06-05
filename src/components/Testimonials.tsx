@@ -49,8 +49,6 @@ const Testimonials = React.memo(() => {
   const [loading, setLoading] = useState(false);
 
   const fetchTestimonials = useCallback(async () => {
-    let isMounted = true;
-    
     try {
       setLoading(true);
       
@@ -66,40 +64,25 @@ const Testimonials = React.memo(() => {
         return;
       }
 
-      if (isMounted) {
-        if (data && data.length > 0) {
-          setTestimonials(data);
-        } else {
-          setTestimonials(DEFAULT_TESTIMONIALS);
-        }
+      if (data && data.length > 0) {
+        setTestimonials(data);
+      } else {
+        setTestimonials(DEFAULT_TESTIMONIALS);
       }
     } catch (error) {
       console.error('Error in fetchTestimonials:', error);
-      if (isMounted) {
-        setTestimonials(DEFAULT_TESTIMONIALS);
-      }
+      setTestimonials(DEFAULT_TESTIMONIALS);
     } finally {
-      if (isMounted) {
-        setLoading(false);
-      }
+      setLoading(false);
     }
-
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   useEffect(() => {
-    const cleanup = fetchTestimonials();
-    return () => {
-      if (cleanup && typeof cleanup === 'function') {
-        cleanup();
-      }
-    };
+    fetchTestimonials();
   }, [fetchTestimonials]);
 
   // Memoized star rendering to prevent re-renders
-  const renderStars = useMemo(() => (rating: number) => {
+  const renderStars = useCallback((rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star 
         key={i} 
