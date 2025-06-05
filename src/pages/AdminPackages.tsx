@@ -42,6 +42,8 @@ const AdminPackages = React.memo(() => {
   });
 
   const fetchPackages = useCallback(async () => {
+    let isMounted = true;
+    
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -54,21 +56,36 @@ const AdminPackages = React.memo(() => {
         throw error;
       }
 
-      setPackages(data || []);
+      if (isMounted) {
+        setPackages(data || []);
+      }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch packages",
-        variant: "destructive"
-      });
+      if (isMounted) {
+        toast({
+          title: "Error",
+          description: "Failed to fetch packages",
+          variant: "destructive"
+        });
+      }
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
+
+    return () => {
+      isMounted = false;
+    };
   }, [toast]);
 
   useEffect(() => {
-    fetchPackages();
+    const cleanup = fetchPackages();
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, [fetchPackages]);
   
   const handleAddNewSubmit = useCallback(async () => {
