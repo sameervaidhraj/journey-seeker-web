@@ -204,7 +204,7 @@ const AdminDashboard = () => {
             </>
           )}
           
-          {['super_admin', 'admin'].includes(adminUser.role) && (
+          {(adminUser.role === 'super_admin' || adminUser.role === 'admin') && (
             <button 
               onClick={() => setActiveTab("approvals")}
               className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "approvals" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}

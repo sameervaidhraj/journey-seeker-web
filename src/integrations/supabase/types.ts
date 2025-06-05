@@ -17,8 +17,8 @@ export type Database = {
           email: string
           id: string
           name: string
-          role: Database["public"]["Enums"]["user_role"]
-          status: Database["public"]["Enums"]["user_status"]
+          role: string
+          status: string
           updated_at: string | null
         }
         Insert: {
@@ -28,8 +28,8 @@ export type Database = {
           email: string
           id?: string
           name: string
-          role?: Database["public"]["Enums"]["user_role"]
-          status?: Database["public"]["Enums"]["user_status"]
+          role?: string
+          status?: string
           updated_at?: string | null
         }
         Update: {
@@ -39,19 +39,11 @@ export type Database = {
           email?: string
           id?: string
           name?: string
-          role?: Database["public"]["Enums"]["user_role"]
-          status?: Database["public"]["Enums"]["user_status"]
+          role?: string
+          status?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "app_users_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       offers: {
         Row: {
@@ -171,22 +163,7 @@ export type Database = {
           table_name?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "pending_actions_reviewed_by_fkey"
-            columns: ["reviewed_by"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "pending_actions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       reviews: {
         Row: {
@@ -228,15 +205,7 @@ export type Database = {
           user_location?: string | null
           user_name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "app_users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       special_offers: {
         Row: {
