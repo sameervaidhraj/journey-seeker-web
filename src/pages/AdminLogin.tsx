@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,7 +18,7 @@ import Footer from '@/components/Footer';
 import ForgotPassword from '@/components/auth/ForgotPassword';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
-const AdminLogin = React.memo(() => {
+const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -27,11 +27,6 @@ const AdminLogin = React.memo(() => {
   const navigate = useNavigate();
   const { login, isAuthenticated, loading } = useAdminAuth();
 
-  // Memoized form validation
-  const isFormComplete = useMemo(() => {
-    return email.trim() !== '' && password.trim() !== '';
-  }, [email, password]);
-
   // Redirect if already authenticated
   useEffect(() => {
     if (!loading && isAuthenticated) {
@@ -39,10 +34,10 @@ const AdminLogin = React.memo(() => {
     }
   }, [isAuthenticated, loading, navigate]);
 
-  const handleLogin = useCallback(async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isFormComplete) {
+    if (!email.trim() || !password.trim()) {
       toast({
         title: "Error",
         description: "Please fill in all fields before attempting to login",
@@ -72,97 +67,21 @@ const AdminLogin = React.memo(() => {
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, isFormComplete, login, navigate, toast]);
-
-  // Memoized loading component
-  const LoadingComponent = useMemo(() => (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
-        <div className="text-lg flex items-center gap-2">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-travel-orange"></div>
-          Loading...
-        </div>
-      </div>
-      <Footer />
-    </div>
-  ), []);
-
-  // Memoized login form
-  const LoginForm = useMemo(() => (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
-        <CardDescription className="text-center">
-          Please enter your admin credentials below to access the dashboard
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
-            <Input 
-              id="email" 
-              type="email" 
-              placeholder="admin@asbtravels.com" 
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="email"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password *</Label>
-            <Input 
-              id="password" 
-              type="password" 
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={isLoading}
-              autoComplete="current-password"
-            />
-          </div>
-          <Button 
-            type="submit" 
-            className={`w-full ${isFormComplete 
-              ? 'bg-travel-orange hover:bg-travel-orange/90' 
-              : 'bg-gray-400 cursor-not-allowed'
-            }`}
-            disabled={!isFormComplete || isLoading}
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                Signing In...
-              </div>
-            ) : isFormComplete ? 'Admin Sign In' : 'Please Fill All Fields'}
-          </Button>
-        </form>
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-2">
-        <button
-          type="button"
-          onClick={() => setShowForgotPassword(true)}
-          className="text-sm text-travel-orange hover:underline"
-          disabled={isLoading}
-        >
-          Forgot your password?
-        </button>
-        <div className="text-center text-sm text-gray-600">
-          Need help accessing your account?{" "}
-          <a href="/contact" className="text-travel-orange hover:underline">
-            Contact Support
-          </a>
-        </div>
-      </CardFooter>
-    </Card>
-  ), [email, password, isFormComplete, isLoading, handleLogin]);
+  };
 
   if (loading) {
-    return LoadingComponent;
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <div className="flex-grow flex items-center justify-center bg-travel-gray-light py-12">
+          <div className="text-lg flex items-center gap-2">
+            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-travel-orange"></div>
+            Loading...
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
@@ -174,7 +93,72 @@ const AdminLogin = React.memo(() => {
           {showForgotPassword ? (
             <ForgotPassword onBack={() => setShowForgotPassword(false)} />
           ) : (
-            LoginForm
+            <Card>
+              <CardHeader className="space-y-1">
+                <CardTitle className="text-2xl text-center">Admin Portal Login</CardTitle>
+                <CardDescription className="text-center">
+                  Please enter your admin credentials below to access the dashboard
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <form onSubmit={handleLogin} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email *</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="admin@asbtravels.com" 
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="email"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Password *</Label>
+                    <Input 
+                      id="password" 
+                      type="password" 
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-travel-orange hover:bg-travel-orange/90"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <div className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Signing In...
+                      </div>
+                    ) : 'Admin Sign In'}
+                  </Button>
+                </form>
+              </CardContent>
+              <CardFooter className="flex flex-col space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-sm text-travel-orange hover:underline"
+                  disabled={isLoading}
+                >
+                  Forgot your password?
+                </button>
+                <div className="text-center text-sm text-gray-600">
+                  Need help accessing your account?{" "}
+                  <a href="/contact" className="text-travel-orange hover:underline">
+                    Contact Support
+                  </a>
+                </div>
+              </CardFooter>
+            </Card>
           )}
         </div>
       </div>
@@ -182,8 +166,6 @@ const AdminLogin = React.memo(() => {
       <Footer />
     </div>
   );
-});
-
-AdminLogin.displayName = 'AdminLogin';
+};
 
 export default AdminLogin;

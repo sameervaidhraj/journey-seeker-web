@@ -15,6 +15,7 @@ interface Package {
 const PackageSection = () => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPackages();
@@ -23,6 +24,9 @@ const PackageSection = () => {
   const fetchPackages = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Fetching packages from Supabase...');
+      
       const { data, error } = await supabase
         .from('packages')
         .select('*')
@@ -31,12 +35,15 @@ const PackageSection = () => {
 
       if (error) {
         console.error('Error fetching packages:', error);
+        setError('Failed to load packages');
         return;
       }
 
+      console.log('Packages fetched successfully:', data);
       setPackages(data || []);
     } catch (error) {
       console.error('Error fetching packages:', error);
+      setError('Failed to load packages');
     } finally {
       setLoading(false);
     }
@@ -55,6 +62,31 @@ const PackageSection = () => {
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-travel-orange"></div>
             <span className="ml-2 text-gray-600">Loading packages...</span>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Holiday Packages</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Discover our amazing holiday packages designed for unforgettable experiences.
+            </p>
+          </div>
+          <div className="text-center py-12">
+            <h3 className="text-lg font-medium text-red-600 mb-2">Error loading packages</h3>
+            <p className="text-gray-500 mb-4">{error}</p>
+            <Button 
+              onClick={fetchPackages}
+              className="bg-travel-blue hover:bg-travel-blue/90"
+            >
+              Try Again
+            </Button>
           </div>
         </div>
       </section>
