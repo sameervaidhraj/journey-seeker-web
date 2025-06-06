@@ -1,5 +1,5 @@
 
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -51,38 +51,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Check for existing session and set up auth state listener
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Admin auth state changed:', event, session?.user?.email);
-        setSession(session);
-        
-        if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
-          await fetchAdminProfile(session.user);
-        } else {
-          setAdminUser(null);
-          setIsAuthenticated(false);
-        }
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
-        fetchAdminProfile(session.user);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchAdminProfile = async (user: User) => {
+  const fetchAdminProfile = useCallback(async (user: User) => {
     try {
       if (!ADMIN_EMAILS.includes(user.email || '')) {
         console.log('User is not an admin:', user.email);
@@ -94,7 +63,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       console.log('Fetching admin profile for:', user.email);
       
       // Check if user exists in app_users
-      let { data: appUser, error } = await supabase
+      const { data: appUser, error } = await supabase
         .from('app_users')
         .select('*')
         .eq('email', user.email)
@@ -132,19 +101,23 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return;
         }
 
-        appUser = newAppUser;
-        console.log('Created new admin user:', appUser);
+        const finalUser = newAppUser;
+        console.log('Created new admin user:', finalUser);
+        
+        setAdminUser({
+          id: finalUser.id,
+          name: finalUser.name,
+          email: finalUser.email,
+          role: finalUser.role as 'admin' | 'super_admin',
+          status: 'active',
+        });
+        setIsAuthenticated(true);
+        return;
       }
 
       if (error) {
         console.error('Error fetching admin profile:', error);
-        toast({
-          title: "Access Error",
-          description: "There was an error accessing your account. Please try again.",
-          variant: "destructive",
-        });
-        await supabase.auth.signOut();
-        return;
+        throw error;
       }
 
       if (!appUser) {
@@ -191,10 +164,53 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setAdminUser(null);
       setIsAuthenticated(false);
     }
-  };
+  }, [toast]);
+
+  // Check for existing session and set up auth state listener
+  useEffect(() => {
+    let isMounted = true;
+
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (!isMounted) return;
+        
+        console.log('Admin auth state changed:', event, session?.user?.email);
+        setSession(session);
+        
+        if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
+          await fetchAdminProfile(session.user);
+        } else {
+          setAdminUser(null);
+          setIsAuthenticated(false);
+        }
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    const getInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!isMounted) return;
+      
+      setSession(session);
+      if (session?.user && ADMIN_EMAILS.includes(session.user.email || '')) {
+        await fetchAdminProfile(session.user);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    getInitialSession();
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, [fetchAdminProfile]);
 
   // Login function
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
       console.log('Attempting admin login for:', email);
@@ -246,10 +262,10 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   // Logout function
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await supabase.auth.signOut();
       setAdminUser(null);
@@ -265,7 +281,7 @@ export const AdminAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
+  }, [toast, navigate]);
 
   return (
     <AdminAuthContext.Provider value={{ 

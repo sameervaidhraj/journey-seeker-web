@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,12 +16,9 @@ const PackageSection = () => {
   const [packages, setPackages] = useState<Package[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
-  useEffect(() => {
-    fetchPackages();
-  }, []);
-
-  const fetchPackages = async () => {
+  const fetchPackages = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -35,18 +32,35 @@ const PackageSection = () => {
 
       if (error) {
         console.error('Error fetching packages:', error);
-        setError('Failed to load packages');
-        return;
+        throw new Error('Failed to load packages: ' + error.message);
       }
 
       console.log('Packages fetched successfully:', data);
       setPackages(data || []);
+      setRetryCount(0); // Reset retry count on success
     } catch (error) {
       console.error('Error fetching packages:', error);
-      setError('Failed to load packages');
+      setError(error instanceof Error ? error.message : 'Failed to load packages');
+      
+      // Auto-retry on failure (max 3 times)
+      if (retryCount < 3) {
+        setTimeout(() => {
+          setRetryCount(prev => prev + 1);
+          fetchPackages();
+        }, 1000 * (retryCount + 1)); // Exponential backoff
+      }
     } finally {
       setLoading(false);
     }
+  }, [retryCount]);
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const handleRetry = () => {
+    setRetryCount(0);
+    fetchPackages();
   };
 
   if (loading) {
@@ -81,8 +95,9 @@ const PackageSection = () => {
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-red-600 mb-2">Error loading packages</h3>
             <p className="text-gray-500 mb-4">{error}</p>
+            <p className="text-sm text-gray-400 mb-4">Retry attempt: {retryCount}/3</p>
             <Button 
-              onClick={fetchPackages}
+              onClick={handleRetry}
               className="bg-travel-blue hover:bg-travel-blue/90"
             >
               Try Again
@@ -107,6 +122,12 @@ const PackageSection = () => {
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-600 mb-2">No packages available</h3>
             <p className="text-gray-500">Check back soon for exciting holiday packages!</p>
+            <Button 
+              onClick={handleRetry}
+              className="mt-4 bg-travel-blue hover:bg-travel-blue/90"
+            >
+              Refresh
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -120,6 +141,7 @@ const PackageSection = () => {
                     onError={(e) => {
                       e.currentTarget.src = "https://via.placeholder.com/400x300?text=Package+Image";
                     }}
+                    loading="lazy"
                   />
                 </div>
                 <div className="p-6">
