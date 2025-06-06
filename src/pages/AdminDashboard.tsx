@@ -10,14 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plane, Building2, Package, Tag, LogOut, Bell, User, Calendar, CreditCard, Users, CheckCircle, MessageSquare } from 'lucide-react';
+import { Plane, Building2, Package, Tag, LogOut, Bell, User, Calendar, CreditCard, Users, CheckCircle } from 'lucide-react';
 import AdminPackages from './AdminPackages';
 import AdminHotels from './AdminHotels';
 import AdminFlights from './AdminFlights';
 import AdminOffers from './AdminOffers';
 import UserManagement from '@/components/admin/UserManagement';
 import ApprovalManagement from '@/components/admin/ApprovalManagement';
-import ReviewsManagement from '@/components/admin/ReviewsManagement';
 import { useAdminAuth } from '@/contexts/AdminAuthContext';
 
 const AdminDashboard = () => {
@@ -72,8 +71,6 @@ const AdminDashboard = () => {
         return <UserManagement />;
       case "approvals":
         return <ApprovalManagement />;
-      case "reviews":
-        return <ReviewsManagement />;
       default:
         // Dashboard tab content
         return (
@@ -242,13 +239,6 @@ const AdminDashboard = () => {
             <Tag size={16} className="mr-3" />
             Special Offers
           </button>
-          <button 
-            onClick={() => setActiveTab("reviews")}
-            className={`w-full flex items-center px-4 py-3 rounded-md text-left text-sm ${activeTab === "reviews" ? "bg-travel-blue text-white" : "text-gray-700 hover:bg-gray-100"}`}
-          >
-            <MessageSquare size={16} className="mr-3" />
-            Reviews
-          </button>
           <hr className="my-4" />
           <button 
             onClick={handleLogout}
@@ -330,15 +320,9 @@ const AdminDashboard = () => {
             </button>
             <button 
               onClick={() => setActiveTab("offers")}
-              className={`flex-shrink-0 px-3 py-1 text-sm rounded-md mr-2 ${activeTab === "offers" ? "bg-travel-blue text-white" : "bg-gray-100 text-gray-700"}`}
+              className={`flex-shrink-0 px-3 py-1 text-sm rounded-md ${activeTab === "offers" ? "bg-travel-blue text-white" : "bg-gray-100 text-gray-700"}`}
             >
               Offers
-            </button>
-            <button 
-              onClick={() => setActiveTab("reviews")}
-              className={`flex-shrink-0 px-3 py-1 text-sm rounded-md ${activeTab === "reviews" ? "bg-travel-blue text-white" : "bg-gray-100 text-gray-700"}`}
-            >
-              Reviews
             </button>
           </div>
         </header>
